@@ -1,0 +1,17 @@
+f234098b4f8ea4b6992af31a6ac7689a *DESCRIPTION
+73552ebb716d1e9ae1795581c0a8d57d *NAMESPACE
+47b0e62ae830e43442554a77db82ddc6 *NEWS.md
+b5aae86474a395ed2c08fcb143b79afe *R/moverci.R
+cd267374af939102601a174cb5a5fa9f *R/ratesci-package.R
+7c4c165c49ddbd26b76eee3cf4c92225 *R/scoreci.R
+df44bc00908dad68aa4661cff9a2e5da *man/jeffreysci.Rd
+a6e5cf85e982bd0c8ea45db6df952318 *man/moverbci.Rd
+18660f20de656ebfe89b8b2d9c071000 *man/moverci.Rd
+da50f0bdc090f9c8b67e9da7c90ee9ce *man/ratesci-package.Rd
+b1c9a1c023bc05500f887062fbd1894d *man/scasci.Rd
+343333dd867863ee88ad54c70e317e83 *man/scoreci.Rd
+446576965c5e97db8aa917232fba3845 *man/tdasci.Rd
+77665c1ef9ebd12fb8b3efdde4231e18 *tests/testthat.R
+f44e7fd9ae800d3e3fd7c2ae3b19673a *tests/testthat/test1.R
+33edcad1b67529831d12e940f5820384 *tests/testthat/test2.R
+3183ec598f964b2a0216a7d66338b282 *tests/testthat/test3.R
