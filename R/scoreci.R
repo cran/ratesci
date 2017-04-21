@@ -5,7 +5,7 @@
 #' ratio ("RR") for independent binomial or Poisson rates, or for odds ratio 
 #' ("OR", binomial only). Including options for bias correction (from Miettinen 
 #' & Nurminen), skewness correction ("GNbc" method from Laud & Dane, developed
-#' from Gart & Nam, and generalised as "SCAS" in forthcoming publication) and
+#' from Gart & Nam, and generalised as "SCAS" in Laud 2017 [in press]) and
 #' continuity correction. Also includes intervals for a single proportion, i.e.
 #' Wilson score method, with skewness correction, which has slightly better
 #' coverage properties than the Jeffreys method. This function is vectorised in
@@ -33,10 +33,12 @@
 #'   methods (i.e. Gart & Nam, Mee).
 #' @param cc Number or logical (default FALSE) specifying (amount of) continuity
 #'   correction.
-#' @param delta Number to be used in a one-sided significance test (e.g. 
+#' @param delta (deprecated: parameter renamed to theta0)
+#' @param theta0 Number to be used in a one-sided significance test (e.g. 
 #'   non-inferiority margin). 1-sided p-value will be <0.025 iff 2-sided 95\% CI
-#'   excludes delta. NB: can also be used for a superiority test by setting 
-#'   delta=0.
+#'   excludes theta0. NB: can also be used for a superiority test by setting 
+#'   theta0 = 0 (RD) or 1 (RR/OR). By default, a two-sided test against theta0 = 0 or 1
+#'   is also output: if bcf=F and skew=F this is the same as Pearson's Chi-squared test.
 #' @param precis Number (default 6) specifying precision to be used in
 #'   optimisation subroutine (i.e. number of decimal places).
 #' @param plot Logical (default FALSE) indicating whether to output plot of the
@@ -51,15 +53,16 @@
 #' @param wt Numeric vector containing (optional) user-specified weights.
 #' @param tdas Logical (default FALSE) indicating whether to use t-distribution
 #'   method for stratified data (defined in Laud 2016).
+#' @param warn Logical (default TRUE) giving the option to suppress warnings.
 #' @param ... Other arguments.
-#' @importFrom stats pchisq pf pnorm pt qbeta qgamma qnorm qqnorm qt
+#' @importFrom stats pchisq pf pnorm pt qbeta qgamma qnorm qqnorm qt dbinom
 #' @importFrom graphics abline lines text
 #' @return A list containing the following components: \describe{ 
 #'   \item{estimates}{a matrix containing estimates of the rates in each group 
 #'   and of the requested contrast, with its confidence interval} \item{pval}{a 
 #'   matrix containing details of the corresponding 2-sided significance test 
 #'   against the null hypothesis that p_1 = p_2, and one-sided significance 
-#'   tests agains the null hypothesis that theta >= or <= delta} 
+#'   tests agains the null hypothesis that theta >= or <= theta0} 
 #'   \item{call}{details of the function call} }
 #'   If stratified = TRUE, the following outputs are added: \describe{
 #'   \item{Qtest}{a vector of values descibing and testing heterogeneity}
@@ -104,7 +107,7 @@
 #' @author Pete Laud, \email{p.j.laud@@sheffield.ac.uk}
 #' @references 
 #'   Laud PJ. Equal-tailed confidence intervals for comparison of 
-#'   rates: Submitted to Pharmaceutical Statistics for peer review.
+#'   rates. Pharmaceutical Statistics [in press].
 #'   
 #'   Laud PJ, Dane A. Confidence intervals for the difference between independent 
 #'   binomial proportions: comparison using a graphical approach and
@@ -138,15 +141,22 @@ scoreci <- function(
 	bcf = TRUE,
 	cc = 0,
 	delta = NULL,
+	theta0 = NULL,
 	precis = 6,
 	plot = FALSE,	
 	plotmax = 100,
 	stratified = FALSE,
 	weighting = "IVS",
 	wt = NULL,
-	tdas = FALSE,	
+	tdas = FALSE,
+	warn = TRUE,
 	...
 	) { 
+  if (!missing(delta)) {
+    warning("argument delta is deprecated; please use theta0 instead.", 
+            call. = FALSE)
+    theta0 <- delta
+  }
   if (!(tolower(substr(distrib, 1, 3)) %in% c("bin", "poi"))) {
     print("Distrib must be one of 'bin' or 'poi'")
     stop()
@@ -159,11 +169,15 @@ scoreci <- function(
 	  print("argument x2 or n2 missing")
 	  stop()
 	}
-  if (!is.numeric(c(x1, n1, x2, n2, delta))) {
-		print("Non-numeric inputs!")
-		stop()
-	}
-	if (any(c(x1, n1, x2, n2) < 0)) {
+  if ((contrast != "p") && !is.numeric(c(x1, n1, x2, n2, theta0))) {
+    print("Non-numeric inputs!")
+    stop()
+  }
+  if ((contrast == "p") && !is.numeric(c(x1, n1, theta0))) {
+    print("Non-numeric inputs!")
+    stop()
+  }
+  if (any(c(x1, n1, x2, n2) < 0)) {
 		print("Negative inputs!")
 		stop()
 	}	
@@ -171,15 +185,15 @@ scoreci <- function(
     print("x1 > n1 or x2 > n2 not possible for distrib = 'bin'")
     stop()
   }
-  if (!is.null(delta)) {	
+  if (!is.null(theta0)) {	
 		if (contrast == "RD") {
-			if (distrib == "bin" && (delta < -1 || delta > 1)) {
-				print("Impossible delta!")
+			if (distrib == "bin" && (theta0 < -1 || theta0 > 1)) {
+				print("Impossible theta0!")
 				stop()			
 			}
 		} else if (contrast == "p") {
-		  if (delta < 0 || (distrib == "bin" && delta > 1)) {
-		    print("Impossible delta!")
+		  if (theta0 < 0 || (distrib == "bin" && theta0 > 1)) {
+		    print("Impossible theta0!")
 		    stop()			
 		  }
 		}
@@ -207,7 +221,7 @@ scoreci <- function(
 	  x2 <- x2[!empty.strat]
 	  n1 <- n1[!empty.strat]
 	  n2 <- n2[!empty.strat]
-	  if(sum(empty.strat)>0) {
+	  if(warn == TRUE && sum(empty.strat)>0) {
 	    print('Warning: at least one stratum contributed no information and was removed')
 	  }
 	  
@@ -233,10 +247,10 @@ scoreci <- function(
 	if (stratified == TRUE && nstrat <= 1) {
 	  stratified <- FALSE
 	  tdas = FALSE
-	  print("Warning: only one stratum!")
+	  if (warn == TRUE) print("Warning: only one stratum!")
 	}
 	if (nstrat == 0) {
-	  print("Warning: no usable data!")
+	  if (warn == TRUE) print("Warning: no usable data!")
 	  if (contrast %in% c("RR", "OR")) {
 	    x1 <- x2 <- 0
 	    n1 <- n2 <- 10
@@ -247,9 +261,9 @@ scoreci <- function(
 	p2hat <- x2/n2
 	
 	#wrapper function for scoretheta
-	myfun <- function(theta, randswitch = tdas, ccswitch = cc) {
+	myfun <- function(theta, randswitch = tdas, ccswitch = cc, stratswitch = stratified) {
 	  scoretheta(theta = theta, x1 = x1, x2 = x2, n1 = n1, n2 = n2, bcf = bcf,
-	             contrast = contrast, distrib = distrib, stratified = stratified,
+	             contrast = contrast, distrib = distrib, stratified = stratswitch,
 	             wt = wt, weighting = weighting, tdas = randswitch, skew = skew,
 	             cc = ccswitch)$score  
 	}
@@ -304,7 +318,7 @@ scoreci <- function(
 	p2d.MLE <- at.MLE$p2d
 	wt.MLE <- at.MLE$wt
 	V.MLE <- at.MLE$V
-
+	
 	# if stratified=TRUE, options are available for assuming fixed effects (tdas=FALSE)
 	# or random effects (tdas=T). The IVS weights are different for each version, which 
 	# in turn can lead to a different point estimate, at which certain quantities are 
@@ -316,13 +330,15 @@ scoreci <- function(
 	                      distrib = distrib, stratified = stratified,
 	                      weighting = weighting, wt = wt, tdas = FALSE,
 	                      skew = skew, cc = cc)
+	  Stheta.FE <- at.FE$Stheta
 	  wt.FE <- at.FE$wt
+	  V.FE <- at.FE$V
 	  tau2.FE <- at.FE$tau2
-	  Q.each <- at.FE$Q.i
+	  Q.each <- at.FE$Q.j
 	  Q.FE <- at.FE$Q
 	  I2 <- max(0, 100 * (Q.FE - (nstrat - 1))/Q.FE)
 	  pval.het <- 1 - pchisq(Q.FE, nstrat - 1)
-	  # Qualitative interaction test to be added...
+	  # Qualitative interaction test is calculated further down
 	  
 	  # as per M&N p218 (little r), actually no longer needed for point estimate. 
 	  p1hat.w <- sum(wt.MLE * x1/n1)/sum(wt.MLE)  
@@ -361,70 +377,24 @@ scoreci <- function(
 	  myfun(theta) + qtnorm, contrast = contrast, distrib = distrib,
 	  precis = precis + 1, uplow = "up")
 
-  # Optional plot of the score function.
-	# Ideally this would be in a separate function, but it is unlikely to be used
-	# much in practice - only included for code development and validation purposes.
-	if (plot == TRUE) {
-	  if (contrast == "RD") {
-	    if (distrib == "bin") {
-	      xlim <- c(max(-1, min(lower - (upper - lower)/2)),
-	                min(1, max(upper + (upper - lower)/2)))
-	    } else if (distrib == "poi") {
-	      xlim <- c(lower - (upper - lower)/2, upper + (upper - lower)/2)
-	    }
-	  } else xlim <- c(max(0, min(0.5 * lower)), min(plotmax, max(1.5 * upper)))
-	myseq <- seq(xlim[1], xlim[2], length.out = 400)
-	  if (stratified) dim1 <- 1 else dim1 <- nstrat
-	  sc <- array(sapply(myseq, function(x) myfun(x)), dim = c(dim1, length(myseq)))
-	  if (stratified == FALSE) {
-	    qnval <- qtnorm
-	    ylim = c(-2.5, 2.5) * qnval
-	    for (i in 1:nstrat) {
-	      plot(myseq, sc[i, ], type = "l", xlim = xlim, ylim = ylim, xlab = contrast,
-	           yaxs = "i", ylab = "Score", col = "blue", 
-	           main = paste0("Score function for ",
-	                         ifelse(distrib == "bin", "binomial", "Poisson"), " ",
-	                         contrast, "\n", x1[i], "/", n1[i], 
-	                         ifelse(contrast == "p", "", paste0(" vs ", x2[i], "/", n2[i])))
-	           #log = ifelse(contrast == "RD", "", "x")
-	           )
-	      text(x = c(lower[i], point[i], upper[i]), y = c(-1.5, -1.75, -2) * qnval,
-	           labels = formatC(c(lower[i], point[i], upper[i]), format = "fg", 4,
-	                            flag = "#"),
-	           pos = 4, offset = -0.2, cex = 0.8, xpd = TRUE)
-	      abline(h = c(-1, 1) * qnval)
-	      abline(h = 0, lty = 2)
-	      lines(rep(lower[i], 2), c(ylim[1], -1.5 * qnval - 0.3), lty = 3)
-	      lines(rep(lower[i], 2), c(-1.5 * qnval + 0.4, qnval), lty = 3)
-	      lines(rep(upper[i], 2), c(ylim[1], -2 * qnval - 0.3), lty = 3)
-	      lines(rep(upper[i], 2), c(-2 * qnval + 0.4, -qnval), lty = 3)
-	      lines(rep(point[i], 2), c(ylim[1], -1.75 * qnval - 0.3), lty = 3)
-	      lines(rep(point[i], 2), c(-1.75 * qnval + 0.4, 0), lty = 3)
-	    }
-	  } else {
-	    qtval <- qtnorm
-	    ylim = c(-2.5, 2.5) * qtval
-	    plot(myseq, sc[1, ], type = "l", ylim = ylim, xlab = contrast,
-	         ylab = "Score", yaxs = "i", col = "blue",
-	         main = paste("Score function for", distrib, contrast)
-	         #log = ifelse(contrast == "RD", "", "x")
-	         )
-	    abline(h = c(-1, 1) * qtval)
-	    abline(h = 0, lty = 2)
-	    lines(rep(lower, 2), c(ylim[1], -1.5 * qtval - 0.3), lty = 3)
-	    lines(rep(lower, 2), c(-1.5 * qtval + 0.4, qtval), lty = 3)
-	    lines(rep(upper, 2), c(ylim[1], -2 * qtval - 0.3), lty = 3)
-	    lines(rep(upper, 2), c(-2 * qtval + 0.4, -qtval), lty = 3)
-	    lines(rep(point, 2), c(ylim[1], -1.75 * qtval - 0.3), lty = 3)
-	    lines(rep(point, 2), c(-1.75 * qtval + 0.4, 0), lty = 3)
-	    text(x = c(lower, point, upper), y = c(-1.5, -1.75, -2) * qtval,
-	         labels = formatC(c(lower, point, upper), format = "fg", 4, flag = "#"),
-	         pos = 4, offset = -0.2, cex = 0.8, xpd = TRUE)
-	  }
-	  if (stratified) 
-	    qqnorm(Stheta.MLE)
+	#get estimate & CI for each stratum
+	if(stratified == TRUE) {
+	  at.MLE.unstrat <- scoretheta(theta = point, x1 = x1, x2 = x2, n1 = n1, n2 = n2, bcf = bcf,
+	                               contrast = contrast,
+	                               distrib = distrib, stratified = FALSE,
+	                               weighting = weighting, wt = wt, tdas = tdas, skew = skew,
+	                               cc = cc)
+	  point.FE.unstrat <- bisect(ftn = function(theta) 
+	    myfun(theta, randswitch = FALSE, ccswitch = 0, stratswitch = FALSE) - 0, contrast = contrast,
+	    distrib = distrib, precis = precis + 1, uplow = "low")
+	  lower.unstrat <- bisect(ftn = function(theta)
+	    myfun(theta, stratswitch = FALSE) - qtnorm, contrast = contrast, distrib = distrib,
+	    precis = precis + 1, uplow = "low")
+	  upper.unstrat <- bisect(ftn = function(theta)
+	    myfun(theta, stratswitch = FALSE) + qtnorm, contrast = contrast, distrib = distrib,
+	    precis = precis + 1, uplow = "up")
 	}
-
+	
 	# fix some extreme cases with zero counts
 	#if (contrast == "RR" && skew == FALSE) p2d.w[sum(x2) == 0] <- 0
 	
@@ -434,7 +404,7 @@ scoreci <- function(
 	    upper[x2 == 0] <- Inf
 	  } else {
 	    lower[sum(x1) == 0] <- 0
-	    lower[myfun(0) - qtnorm < 0] <- 0
+	    lower[myfun(1e-15) - qtnorm < 0] <- 0
 	    upper[sum(x2) == 0] <- Inf
 	    point[sum(x2) == 0 & sum(x1) == 0] <- NA
 	    upper[myfun(10^100) + qtnorm > 0] <- Inf
@@ -460,43 +430,137 @@ scoreci <- function(
 	  level = level, inputs,
 	  p1hat = p1hat.w, p2hat = p2hat.w, p1mle = p1d.w, p2mle = p2d.w)
 
-	# optionally add p-value for a test of null hypothesis: theta<=delta
-	# default value of delta depends on contrast
+	# optionally add p-value for a test of null hypothesis: theta<=theta0
+	# default value of theta0 depends on contrast
 	if (contrast == "RD") {
-	  delta0 <- 0 
+	  theta00 <- 0 
 	} else if (contrast == "p") {
-	  delta0 <- 0.5
-	} else delta0 <- 1
-	if (is.null(delta)) delta <- delta0
-	scorezero <- scoretheta(theta = delta0, x1 = x1, x2 = x2, n1 = n1, n2 = n2,
+	  theta00 <- 0.5
+	} else theta00 <- 1
+	if (is.null(theta0)) {
+	  theta0 <- theta00
+	} 
+	scorezero <- scoretheta(theta = theta00, x1 = x1, x2 = x2, n1 = n1, n2 = n2,
 	                        stratified = stratified,
 	                        wt = wt, weighting = weighting, tdas = tdas,
 	                        bcf = bcf, contrast = contrast, distrib = distrib,
 	                        skew = skew, cc = cc)
-	scoredelta <- scoretheta(theta = delta, x1 = x1, x2 = x2, n1 = n1, n2 = n2,
+	scorenull <- scoretheta(theta = theta0, x1 = x1, x2 = x2, n1 = n1, n2 = n2,
 	                         stratified = stratified,
 	                         wt = wt, weighting = weighting, tdas = tdas,
 	                         bcf = bcf, contrast = contrast, distrib = distrib,
 	                         skew = skew, cc = cc)
-	pval.left <- scoredelta$pval
+	pval.left <- scorenull$pval
 	pval.right <- 1 - pval.left
 	chisq.zero <- scorezero$score^2
 	pval2sided <- pchisq(chisq.zero, 1, lower.tail = FALSE)
 	if (tdas == TRUE) pval2sided <- pf(chisq.zero, 1, nstrat - 1, lower.tail = FALSE)
-	pval <- cbind(chisq = chisq.zero, pval2sided, delta = delta,
-	              scoredelta = scoredelta$score, pval.left, pval.right)
-	
+	pval <- cbind(chisq = chisq.zero, pval2sided, theta0 = theta0,
+	              scorenull = scorenull$score, pval.left, pval.right) #, sdot = at.MLE$Sdot)
+
+	#Add qualitative interaction test as per equation S4 of Laud 2017
+	if (stratified == TRUE && nstrat > 1) {
+  	Qc.j <- (scorenull$Stheta)^2 / at.FE$V #V is evaluated at the fixed effects MLE
+  	Qc_m <- sum(Qc.j[scorenull$Stheta > 0])
+  	Qc_p <- sum(Qc.j[scorenull$Stheta < 0])
+  	Qc <- min(Qc_m, Qc_p)
+  	Qcprob <- 0
+  	for (h in 1:(nstrat - 1)) {
+  	  Qcprob <- Qcprob + (1 - pchisq(Qc,h)) * dbinom(h, size = nstrat - 1, prob = 0.5)
+  	}
+	}
+
+	# Optional plot of the score function.
+	# Ideally this would be in a separate function, but it is unlikely to be used
+	# much in practice - only included for code development and validation purposes.
+	if (plot == TRUE) {
+	  if (contrast == "RD") {
+	    if (distrib == "bin") {
+	      xlim <- c(max(-1, min(lower - (upper - lower)/2)),
+	                min(1, max(upper + (upper - lower)/2)))
+	    } else if (distrib == "poi") {
+	      xlim <- c(lower - (upper - lower)/2, upper + (upper - lower)/2)
+	    }
+	  } else xlim <- c(max(0, min(0.5 * lower)), min(plotmax, max(1.5 * upper)))
+	  myseq <- seq(xlim[1], xlim[2], length.out = 400)
+	  if (stratified) dim1 <- 1 else dim1 <- nstrat
+	  sc <- array(sapply(myseq, function(x) myfun(x)), dim = c(dim1, length(myseq)))
+	  if (stratified == FALSE) {
+	    qnval <- qtnorm
+	    ylim = c(-2.5, 2.5) * qnval
+	    for (i in 1:nstrat) {
+	      plot(myseq, sc[i, ], type = "l", xlim = xlim, ylim = ylim, xlab = contrast,
+	           yaxs = "i", ylab = "Score", col = "blue", 
+	           main = paste0("Score function for ",
+	                         ifelse(distrib == "bin", "binomial", "Poisson"), " ",
+	                         contrast, "\n", x1[i], "/", n1[i], 
+	                         ifelse(contrast == "p", "", paste0(" vs ", x2[i], "/", n2[i])))
+	           #log = ifelse(contrast == "RD", "", "x")
+	      )
+	      text(x = c(lower[i], point[i], upper[i]), y = c(-1.5, -1.75, -2) * qnval,
+	           labels = formatC(c(lower[i], point[i], upper[i]), format = "fg", 4,
+	                            flag = "#"),
+	           pos = 4, offset = -0.2, cex = 0.8, xpd = TRUE)
+	      abline(h = c(-1, 1) * qnval)
+	      abline(h = 0, lty = 2)
+	      lines(rep(lower[i], 2), c(ylim[1], -1.5 * qnval - 0.3), lty = 3)
+	      lines(rep(lower[i], 2), c(-1.5 * qnval + 0.4, qnval), lty = 3)
+	      lines(rep(upper[i], 2), c(ylim[1], -2 * qnval - 0.3), lty = 3)
+	      lines(rep(upper[i], 2), c(-2 * qnval + 0.4, -qnval), lty = 3)
+	      lines(rep(point[i], 2), c(ylim[1], -1.75 * qnval - 0.3), lty = 3)
+	      lines(rep(point[i], 2), c(-1.75 * qnval + 0.4, 0), lty = 3)
+	    }
+	  } else {
+	    qtval <- qtnorm
+	    ylim = c(-2.5, 2.5) * qtval
+	    plot(myseq, sc[1, ], type = "l", ylim = ylim, xlab = contrast,
+	         ylab = "Score", yaxs = "i", col = "blue",
+	         main = paste("Score function for", distrib, contrast)
+	         #log = ifelse(contrast == "RD", "", "x")
+	    )
+	    abline(h = c(-1, 1) * qtval)
+	    abline(h = 0, lty = 2)
+	    lines(rep(lower, 2), c(ylim[1], -1.5 * qtval - 0.3), lty = 3)
+	    lines(rep(lower, 2), c(-1.5 * qtval + 0.4, qtval), lty = 3)
+	    lines(rep(upper, 2), c(ylim[1], -2 * qtval - 0.3), lty = 3)
+	    lines(rep(upper, 2), c(-2 * qtval + 0.4, -qtval), lty = 3)
+	    lines(rep(point, 2), c(ylim[1], -1.75 * qtval - 0.3), lty = 3)
+	    lines(rep(point, 2), c(-1.75 * qtval + 0.4, 0), lty = 3)
+	    text(x = c(lower, point, upper), y = c(-1.5, -1.75, -2) * qtval,
+	         labels = formatC(c(lower, point, upper), format = "fg", 4, flag = "#"),
+	         pos = 4, offset = -0.2, cex = 0.8, xpd = TRUE)
+	  }
+	  if (stratified) {
+	    qqnorm(Stheta.FE/sqrt(V.FE))
+	    abline(coef = c(0,1))
+	    plot(x = 1/sqrt(V.FE), y = Stheta.FE/sqrt(V.FE), 
+	         xlab = expression("1/"*sqrt("V"["j"])), 
+	         ylab = expression("S"["j"]*"("*theta*")/"*sqrt("V")), 
+	         xlim = c(0,max(1/sqrt(V.FE))),
+	         ylim = range(c(-2.5,2.5,Stheta.FE/sqrt(V.FE))),
+	         main = expression("Galbraith plot for S"["j"]*"("*theta*")"))
+	    abline(coef = c(0,0))
+	    abline(coef = c(1.96,0),lty=2)
+	    abline(coef = c(-1.96,0),lty=2)
+	    xrange <- seq(0.1,max(1/sqrt(V.FE)),length.out=30)
+	    lines(xrange,(1.96*sqrt(1-xrange^2/sum(1/V.FE))),lty=3)
+	    lines(xrange,(-1.96*sqrt(1-xrange^2/sum(1/V.FE))),lty=3)
+	  }
+	}
+
 	outlist <- list(estimates = estimates, pval = pval) 
 	if (stratified == TRUE) {
-	  Qtest <- c(Q = Q.FE, tau2 = tau2.FE, pval.het = pval.het, I2 = I2)
+	  Qtest <- c(Q = Q.FE, pval.het = pval.het, I2 = I2, Qc = Qc, pval.qualhet = Qcprob) #tau2 = tau2.FE, Qc_m, Qc_p, 
+	  #NB Qc_m + Qc_p = Q only when theta0=MLE 
 	  wtpct <- 100 * wt.MLE/sum(wt.MLE)
 	  wt1pct <- 100 * wt.FE/sum(wt.FE)
 	  outlist <- append(outlist,
 	    list(Qtest = Qtest, weighting = weighting, 
 	    stratdata = cbind(x1j = x1, n1j = n1, x2j = x2, n2j = n2,
-	                      p1hatj = p1hat, p2hatj = p2hat, Qj = Q.each,
-	                      wtpct.fixed = wt1pct, wtpct.rand = wtpct))) 
-#	    p1d=p1d.MLE,p2d=p2d.MLE,Stheta=Stheta.MLE,V.MLE)))
+	                      p1hatj = p1hat, p2hatj = p2hat, 
+	                      wtpct.fixed = wt1pct, wtpct.rand = wtpct, 
+	                      theta.j = point.FE.unstrat, lower.j = lower.unstrat, upper.j = upper.unstrat))) 
+#	  Qj = Q.each, Qc.j = Qc.j, atmle = at.MLE$Stheta,p1d=p1d.MLE,p2d=p2d.MLE,Stheta=Stheta.MLE,V.MLE, atnull = scorenull$Stheta, atmle = at.MLE$Stheta)))
 	}
 	outlist <- append(outlist, list(call = c(distrib = distrib,
 	                 contrast = contrast, level = level, skew = skew,
@@ -534,6 +598,7 @@ scasci <- function(
   level = 0.95,
   cc = 0,
   delta = NULL,
+  theta0 = NULL,
   precis = 6,
   plot = FALSE,	
   plotmax = 100,
@@ -542,6 +607,11 @@ scasci <- function(
   wt = NULL,
   ...
 ) { 
+  if (!missing(delta)) {
+    warning("argument delta is deprecated; please use theta0 instead.", 
+            call. = FALSE)
+    theta0 <- delta
+  }
   scoreci(
     x1 = x1,
     n1 = n1,
@@ -551,7 +621,7 @@ scasci <- function(
     contrast = contrast,
     level = level,
     cc = cc,
-    delta = delta,
+    theta0 = theta0,
     precis = precis,
     plot = plot,	
     plotmax = plotmax,
@@ -590,6 +660,7 @@ tdasci <- function(
   level = 0.95,
   cc = 0,
   delta = NULL,
+  theta0 = NULL,
   precis = 6,
   plot = FALSE,	
   plotmax = 100,
@@ -597,6 +668,11 @@ tdasci <- function(
   wt = NULL,
   ...
 ) { 
+  if (!missing(delta)) {
+    warning("argument delta is deprecated; please use theta0 instead.", 
+            call. = FALSE)
+    theta0 <- delta
+  }
   scoreci(
     x1 = x1,
     n1 = n1,
@@ -606,13 +682,14 @@ tdasci <- function(
     contrast = contrast,
     level = level,
     cc = cc,
-    delta = delta,
+    theta0 = theta0,
     precis = precis,
     plot = plot,	
     plotmax = plotmax,
     stratified = TRUE,
     weighting = weighting,
     wt = wt,
+    tdas = TRUE,
     skew = FALSE,
     bcf = TRUE,
     ...
@@ -768,6 +845,7 @@ scoretheta <- function (
 	    p2d <- ifelse(A == 0, -C_/B, ifelse(num == 0, 0, num/(2 * A))) 
 	    # If A=0 then we solve a linear equation instead
 	    p1d <- p2d * theta/(1 + p2d * (theta - 1))
+	    p1d[theta == 0] <- 0
 	    Stheta <- (p1hat - p1d)/(p1d * (1 - p1d)) - (p2hat - p2d)/(p2d * (1 - p2d))
 	    V <- pmax(0, (1/(n1 * p1d * (1 - p1d)) + 1/(n2 * p2d * (1 - p2d))) * lambda)  
 	    # set to zero if machine precision error in cos function produces a negative V
@@ -818,7 +896,7 @@ scoretheta <- function (
 	      # (without theoretical justification for OR)
 	    } else if (weighting == "IVS") {
 	      # IVS: inverse variance weights updated wih V.tilde
-	      if (all(V == 0) || all(is.na(V)) || all (V == Inf)) { 
+	      if (all(V == 0) || all(V == Inf | is.na(V)) ) { 
 	        wt <- rep(1, nstrat)
 	      } else wt <- 1/V  
 	    } else if (weighting == "MN") {
@@ -853,11 +931,13 @@ scoretheta <- function (
 	    }
 	  } else weighting <- "User-defined"
 
-		Sdot <- sum(wt * Stheta)/sum(wt)
-		if (weighting == "IVS") {
-		  Q.i <- wt * ((Stheta - Sdot)^2)  #This version for iterative weights?
-		} else Q.i <- ((Stheta - Sdot)^2)/V
-		Q <- sum(Q.i)
+		Sdot <- sum(wt * Stheta)/sum(wt)  
+		#NB the skewness correction is omitted for the heterogeneity test statistics.
+	  Q.j <- ((Stheta - Sdot)^2)/V 
+	  #NB it is necessary to include Sdot here for TDAS method to work.
+	  # - for the heterogeneity test evaluated at MLE, Sdot will equal 0 if skew=F
+		Q <- sum(Q.j) #NB it is necessary to use equation S2 here for TDAS method to work
+		#		Q[all(Stheta == Inf)] <- 0 #Attempt to get scoretheta(0) to work for contrast=="OR"
 		W <- sum(wt)
 		
 		if (weighting == "IVS") {
@@ -868,7 +948,8 @@ scoretheta <- function (
 		    (sum(1/V) - 1 * (sum(wt^2)/W))  
 		  # only needed if want to output tau2.
 		}
-		if (tdas == TRUE && weighting == "IVS" && !(all(V == 0) || all(is.na(V)))) {
+		if (tdas == TRUE && weighting == "IVS" && !(all(V == 0) || 
+		                                            all(V == Inf | is.na(V)))) {
 		  wt <- 1/(V + tau2)
 		}  
 		
@@ -918,7 +999,7 @@ scoretheta <- function (
 	                p2d = p2d, mu3 = mu3, pval = pval)
 	if (stratified) {
 	  outlist <- append(outlist, list(Sdot = Sdot, Vdot = Vdot, tau2 = tau2,
-	             VS = VS, t2 = t2, Q.i = Q.i, Q = Q, wt = wt, p1ds = p1ds, p2ds = p2ds))
+	             VS = VS, t2 = t2, Q.j = Q.j, Q = Q, wt = wt, p1ds = p1ds, p2ds = p2ds))
 	}
 	return(outlist)
 }
