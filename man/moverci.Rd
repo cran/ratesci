@@ -5,9 +5,23 @@
 \title{MOVER confidence intervals for comparisons of independent binomial or Poisson
 rates.}
 \usage{
-moverci(x1, n1, x2 = NULL, n2 = NULL, a1 = 0.5, b1 = 0.5, a2 = 0.5,
-  b2 = 0.5, cc = FALSE, level = 0.95, distrib = "bin",
-  contrast = "RD", type = "jeff", adj = FALSE, ...)
+moverci(
+  x1,
+  n1,
+  x2 = NULL,
+  n2 = NULL,
+  a1 = 0.5,
+  b1 = 0.5,
+  a2 = 0.5,
+  b2 = 0.5,
+  cc = FALSE,
+  level = 0.95,
+  distrib = "bin",
+  contrast = "RD",
+  type = "jeff",
+  adj = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x1, x2}{Numeric vectors of numbers of events in group 1 & group 2
@@ -68,11 +82,11 @@ approximate Bayesian confidence interval incorporating prior beliefs about
 the group event rates.
 }
 \examples{
-  #Binomial RD, MOVER-J method:
-  moverci(x1 = 5, n1 = 56, x2 = 0, n2 = 29)
+# Binomial RD, MOVER-J method:
+moverci(x1 = 5, n1 = 56, x2 = 0, n2 = 29)
 
-  #Binomial RD, Newcombe method:
-  moverci(x1 = 5, n1 = 56, x2 = 0, n2 = 29, type = "wilson")
+# Binomial RD, Newcombe method:
+moverci(x1 = 5, n1 = 56, x2 = 0, n2 = 29, type = "wilson")
 }
 \references{
 Laud PJ. Equal-tailed confidence intervals for comparison of

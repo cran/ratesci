@@ -4,8 +4,16 @@
 \alias{pairbinci}
 \title{Confidence intervals for comparisons of paired binomial rates.}
 \usage{
-pairbinci(x, contrast = "RD", level = 0.95, method_RD = "Score",
-  method_RR = "Score", method_OR = "SCAS", theta0 = NULL, precis = 6)
+pairbinci(
+  x,
+  contrast = "RD",
+  level = 0.95,
+  method_RD = "Score",
+  method_RR = "Score",
+  method_OR = "SCAS",
+  theta0 = NULL,
+  precis = 6
+)
 }
 \arguments{
 \item{x}{A numeric vector object specified as c(a,b,c,d)
@@ -62,12 +70,12 @@ For OR, intervals are produced based on transforming various intervals for
 the single proportion, including SCAS, mid-p and Jeffreys.
 }
 \examples{
-  #Data example from Agresti-Min 2005
-  pairbinci(x = c(53,16,8,9), contrast="RD", method_RD="Score")
-  pairbinci(x = c(53,16,8,9), contrast="RD", method_RD="TDAS")
-  pairbinci(x = c(53,16,8,9), contrast="RR", method_RR="Score")
-  pairbinci(x = c(53,16,8,9), contrast="RR", method_RR="TDAS")
-  pairbinci(x = c(53,16,8,9), contrast="OR", method_OR="SCAS")
+# Data example from Agresti-Min 2005
+pairbinci(x = c(53, 16, 8, 9), contrast = "RD", method_RD = "Score")
+pairbinci(x = c(53, 16, 8, 9), contrast = "RD", method_RD = "TDAS")
+pairbinci(x = c(53, 16, 8, 9), contrast = "RR", method_RR = "Score")
+pairbinci(x = c(53, 16, 8, 9), contrast = "RR", method_RR = "TDAS")
+pairbinci(x = c(53, 16, 8, 9), contrast = "OR", method_OR = "SCAS")
 }
 \references{
 Laud PJ. Equal-tailed confidence intervals for comparison of

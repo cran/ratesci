@@ -5,8 +5,17 @@
 \title{Jeffreys and other approximate Bayesian confidence intervals for a single
 binomial or Poisson rate.}
 \usage{
-jeffreysci(x, n, ai = 0.5, bi = 0.5, cc = 0, level = 0.95,
-  distrib = "bin", adj = TRUE, ...)
+jeffreysci(
+  x,
+  n,
+  ai = 0.5,
+  bi = 0.5,
+  cc = 0,
+  level = 0.95,
+  distrib = "bin",
+  adj = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{Numeric vector of number of events.}
@@ -43,8 +52,8 @@ quantiles of a Beta distribution as described in Brown et al. 2001) also
 included by way of a "continuity correction" parameter.
 }
 \examples{
-  #Jeffreys method:
-  jeffreysci(x = 5, n = 56)
+# Jeffreys method:
+jeffreysci(x = 5, n = 56)
 }
 \references{
 Laud PJ. Equal-tailed confidence intervals for comparison of

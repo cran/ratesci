@@ -5,11 +5,40 @@
 \title{Score confidence intervals for comparisons of independent binomial or Poisson
 rates.}
 \usage{
-scoreci(x1, n1, x2 = NULL, n2 = NULL, distrib = "bin", contrast = "RD",
-  level = 0.95, skew = TRUE, ORbias = NULL, bcf = TRUE, cc = FALSE,
-  theta0 = NULL, precis = 6, plot = FALSE, plotmax = 100,
-  stratified = FALSE, weighting = "IVS", wt = NULL, tdas = FALSE,
-  warn = TRUE, ...)
+scoreci(
+  x1,
+  n1,
+  x2 = NULL,
+  n2 = NULL,
+  distrib = "bin",
+  contrast = "RD",
+  level = 0.95,
+  skew = TRUE,
+  simpleskew = FALSE,
+  ORbias = TRUE,
+  RRtang = NULL,
+  bcf = TRUE,
+  cc = FALSE,
+  theta0 = NULL,
+  precis = 6,
+  plot = FALSE,
+  plotmax = 100,
+  hetplot = FALSE,
+  xlim = NULL,
+  ylim = NULL,
+  stratified = FALSE,
+  weighting = NULL,
+  MNtol = 1e-08,
+  wt = NULL,
+  sda = NULL,
+  fda = NULL,
+  dropzeros = FALSE,
+  tdas = NULL,
+  random = FALSE,
+  prediction = FALSE,
+  warn = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x1, x2}{Numeric vectors of numbers of events in group 1 & group 2
@@ -32,32 +61,47 @@ contrast="p" gives an interval for the single proportion or rate x1/n1.}
 correction (for the SCAS method recommended in Laud 2017) or not (for
 the Miettinen-Nurminen method).}
 
-\item{ORbias}{Logical (default is value of skew for contrast="OR", otherwise
+\item{simpleskew}{Logical (default FALSE) indicating whether to use the
+"simplified" skewness correction instead of the quadratic solution.
+See Laud 2021 for details. NOTE: this version of the score is only
+suitable for obtaining confidence limits, not p-values.}
+
+\item{ORbias}{Logical (default is TRUE for contrast="OR", otherwise
 NULL) indicating whether to apply additional bias correction for OR derived
-from Gart 1985. (Corrigendum to Laud 2017 in press). Only applies if
-contrast is "OR".}
+from Gart 1985. (Corrigendum to Laud 2017, published May 2018).
+Only applies if contrast is "OR".}
+
+\item{RRtang}{Logical indicating whether to use Tang's score for RR:
+Stheta = (p1hat - p2hat * theta) / p2d (see Tang 2020).
+Default TRUE for stratified = TRUE, with weighting = "IVS" or "INV".
+Forced to FALSE for stratified = TRUE, with fixed weighting.
+Experimental for distrib = "poi".}
 
 \item{bcf}{Logical (default TRUE) indicating whether to apply bias correction
 in the score denominator. Applicable to distrib = "bin" only. (NB: bcf =
 FALSE option is really only included for legacy validation against previous
-published methods (i.e. Gart & Nam, Mee, or standard Chi-squared test).}
+published methods (i.e. Gart & Nam, Mee, or standard Chi-squared test).
+Ignored for contrast = "p".}
 
 \item{cc}{Number or logical (default FALSE) specifying (amount of) continuity
 correction. Numeric value is taken as the gamma parameter in Laud 2017,
-Appendix S2 (default 0.5 if cc=TRUE).
+Appendix S2 (default 0.5 if cc = TRUE).
 IMPORTANT NOTES:
 1) This is a 'continuity correction' aimed at approximating strictly
 conservative coverage, NOT for dealing with zero cell counts. Such
-'sparse data adjustments' are not needed in the score method.
+'sparse data adjustments' are not needed in the score method,
+except to deal with double-zero cells for RD (& double-100% cells for
+binomial RD & RR) with IVS/INV weights.
 2) The continuity corrections provided here have not been fully tested for
 stratified methods.}
 
 \item{theta0}{Number to be used in a one-sided significance test (e.g.
 non-inferiority margin). 1-sided p-value will be <0.025 iff 2-sided 95\% CI
-excludes theta0. NB: can also be used for a superiority test by setting
-theta0 = 0 (RD) or 1 (RR/OR). By default, a two-sided test against theta0 =
-0 (or 1 as appropriate) is also output: if bcf=F and skew=F this is the
-same as Pearson's Chi-squared test.}
+excludes theta0. If bcf = FALSE and skew = FALSE this gives a
+Farrington-Manning test.
+By default, a two-sided test against theta0 = 0 (for RD) or 1 (for RR/OR)
+is also output: if bcf = FALSE and skew = FALSE this is the same as
+Pearson's Chi-squared test.}
 
 \item{precis}{Number (default 6) specifying precision (i.e. number of decimal
 places) to be used in optimisation subroutine for the confidence interval.}
@@ -68,6 +112,13 @@ score function}
 \item{plotmax}{Numeric value indicating maximum value to be displayed on
 x-axis of plots (useful for ratio contrasts which can be infinite).}
 
+\item{hetplot}{Logical (default FALSE) indicating whether to output plots for
+evaluating heterogeneity of stratified datasets.}
+
+\item{xlim}{pair of values indicating range of values to be plotted.}
+
+\item{ylim}{pair of values indicating range of values to be plotted.}
+
 \item{stratified}{Logical (default FALSE) indicating whether to combine
 vector inputs into a single stratified analysis.
 IMPORTANT NOTE: The mechanism for stratified calculations is enabled for
@@ -75,14 +126,45 @@ contrast = "p", but the performance of the resulting intervals has not
 been fully evaluated.}
 
 \item{weighting}{String indicating which weighting method to use if
-stratified = "TRUE":  "IVS" = Inverse Variance of Score (default, see Laud
-2017 for details), "MH" = Mantel-Haenszel, "MN" = Miettinen-Nurminen
-iterative weights.}
+stratified = "TRUE":
+"IVS" = Inverse Variance of Score (see Laud 2017 for details),
+"INV" = Inverse Variance (bcf omitted, default for contrast = "OR"),
+"MH" = Mantel-Haenszel (default for contrast = "RD" or "RR"),
+"MN" = Miettinen-Nurminen iterative weights.
+For CI consistent with a CMH test, select skew = FALSE and use
+MH weighting for RD/RR and IVS for OR.}
+
+\item{MNtol}{Numeric value indicating convergence tolerance to be used in
+iteration with weighting = "MN".}
 
 \item{wt}{Numeric vector containing (optional) user-specified weights.}
 
-\item{tdas}{Logical (default FALSE) indicating whether to use t-distribution
-method for stratified data (defined in Laud 2017).}
+\item{sda}{Sparse data adjustment to avoid zero variance when x1 + x2 = 0:
+Only applied when stratified = TRUE.
+Default 0.5 for RD with IVS/INV weights.
+Not required for RR/OR, default is to remove double-zero strata
+instead.}
+
+\item{fda}{Full data adjustment to avoid zero variance when x1 + x2 = n1 + n2:
+Only applied when stratified = TRUE.
+Default 0.5 for RD & RR with IVS/INV weights.
+Not required for OR, default is to remove affected strata.}
+
+\item{dropzeros}{Logical (default FALSE) indicating whether to drop
+uninformative strata for RR/OR, even when the choice of weights would allow
+them to be retained for a fixed effects analysis.
+Has no effect on estimates, just the heterogeneity test.}
+
+\item{tdas}{(deprecated: parameter renamed to random)}
+
+\item{random}{Logical (default FALSE) indicating whether to perform random
+effects meta-analysis for stratified data, using the t-distribution (TDAS)
+method for stratified data (defined in Laud 2017).
+NOTE: If random = TRUE, then skew = TRUE only affects the per-stratum
+estimates.}
+
+\item{prediction}{Logical (default FALSE) indicating whether to produce
+a prediction interval (work in progress).}
 
 \item{warn}{Logical (default TRUE) giving the option to suppress warnings.}
 
@@ -112,52 +194,82 @@ Also includes score intervals for a single binomial proportion or Poisson
 rate. Based on the Wilson score interval, when corrected for skewness,
 coverage is almost identical to the mid-p method, or Clopper-Pearson
 when also continuity-corrected.
+Hypothesis tests for superiority or non-inferiority are provided using the
+same score, to ensure consistency between test and CI.
 This function is vectorised in x1, x2, n1, and n2.  Vector inputs may also be
 combined into a single stratified analysis (e.g. meta-analysis), either using
-fixed effects, or the more general "TDAS" method, which incorporates stratum
-variability using a t-distribution score (inspired by
+fixed effects, or the more general random effects "TDAS" method, which
+incorporates stratum variability using a t-distribution score (inspired by
 Hartung-Knapp-Sidik-Jonkman).
+For fixed-effects analysis of stratified datasets, with weighting = "MH" for
+RD or RR, or weighting = "IVS" for OR, omitting the skewness correction
+produces the CMH test, together with a coherent confidence interval for the
+required contrast.
 }
 \examples{
-  #Binomial RD, SCAS method:
-  scoreci(x1 = c(12,19,5), n1 = c(16,29,56), x2 = c(1,22,0), n2 = c(16,30,29))
+# Binomial RD, SCAS method:
+scoreci(
+  x1 = c(12, 19, 5), n1 = c(16, 29, 56),
+  x2 = c(1, 22, 0), n2 = c(16, 30, 29)
+)
 
-  #Binomial RD, MN method:
-  scoreci(x1 = c(12,19,5), n1 = c(16,29,56), x2 = c(1,22,0), n2 = c(16,30,29), skew = FALSE)
+# Binomial RD, MN method:
+scoreci(
+  x1 = c(12, 19, 5), n1 = c(16, 29, 56),
+  x2 = c(1, 22, 0), n2 = c(16, 30, 29), skew = FALSE
+)
 
-  #Poisson RR, SCAS method:
-  scoreci(x1 = 5, n1 = 56, x2 = 0, n2 = 29, distrib = "poi", contrast = "RR")
+# Poisson RR, SCAS method:
+scoreci(x1 = 5, n1 = 56, x2 = 0, n2 = 29, distrib = "poi", contrast = "RR")
 
-  #Poisson RR, MN method:
-  scoreci(x1 = 5, n1 = 56, x2 = 0, n2 = 29, distrib = "poi", contrast = "RR", skew = FALSE)
+# Poisson RR, MN method:
+scoreci(
+  x1 = 5, n1 = 56, x2 = 0, n2 = 29, distrib = "poi",
+  contrast = "RR", skew = FALSE
+)
 
-  #Binomial rate, SCAS method:
-  scoreci(x1 = c(5,0), n1 = c(56,29), contrast = "p")
+# Binomial rate, SCAS method:
+scoreci(x1 = c(5, 0), n1 = c(56, 29), contrast = "p")
 
-  #Binomial rate, Wilson score method:
-  scoreci(x1 = c(5,0), n1 = c(56,29), contrast = "p", skew = FALSE)
+# Binomial rate, Wilson score method:
+scoreci(x1 = c(5, 0), n1 = c(56, 29), contrast = "p", skew = FALSE)
 
-  #Poisson rate, SCAS method:
-  scoreci(x1 = c(5,0), n1 = c(56,29), distrib = "poi", contrast = "p")
+# Poisson rate, SCAS method:
+scoreci(x1 = c(5, 0), n1 = c(56, 29), distrib = "poi", contrast = "p")
 
-  #Stratified example, using data from Hartung & Knapp:
-  scoreci(x1 = c(15,12,29,42,14,44,14,29,10,17,38,19,21),
-          x2 = c(9,1,18,31,6,17,7,23,3,6,12,22,19),
-          n1 = c(16,16,34,56,22,54,17,58,14,26,44,29,38),
-          n2 = c(16,16,34,56,22,55,15,58,15,27,45,30,38),
-          stratified = TRUE)
+# Stratified example, using data from Hartung & Knapp:
+scoreci(
+  x1 = c(15, 12, 29, 42, 14, 44, 14, 29, 10, 17, 38, 19, 21),
+  x2 = c(9, 1, 18, 31, 6, 17, 7, 23, 3, 6, 12, 22, 19),
+  n1 = c(16, 16, 34, 56, 22, 54, 17, 58, 14, 26, 44, 29, 38),
+  n2 = c(16, 16, 34, 56, 22, 55, 15, 58, 15, 27, 45, 30, 38),
+  stratified = TRUE
+)
 
-  #TDAS example, using data from Hartung & Knapp:
-  scoreci(x1 = c(15,12,29,42,14,44,14,29,10,17,38,19,21),
-          x2 = c(9,1,18,31,6,17,7,23,3,6,12,22,19),
-          n1 = c(16,16,34,56,22,54,17,58,14,26,44,29,38),
-          n2 = c(16,16,34,56,22,55,15,58,15,27,45,30,38),
-          stratified = TRUE, tdas = TRUE)
+# TDAS example, using data from Hartung & Knapp:
+scoreci(
+  x1 = c(15, 12, 29, 42, 14, 44, 14, 29, 10, 17, 38, 19, 21),
+  x2 = c(9, 1, 18, 31, 6, 17, 7, 23, 3, 6, 12, 22, 19),
+  n1 = c(16, 16, 34, 56, 22, 54, 17, 58, 14, 26, 44, 29, 38),
+  n2 = c(16, 16, 34, 56, 22, 55, 15, 58, 15, 27, 45, 30, 38),
+  stratified = TRUE, random = TRUE
+)
+
+# Stratified example, with extremely rare instance of non-calculable skewness
+# correction seen on plot of score function:
+scoreci(
+  x1 = c(1, 16), n1 = c(20, 40), x2 = c(0, 139), n2 = c(80, 160),
+  contrast = "RD", skew = TRUE, simpleskew = FALSE,
+  distrib = "bin", stratified = TRUE, plot = TRUE, weighting = "IVS"
+)
 
 }
 \references{
 Laud PJ. Equal-tailed confidence intervals for comparison of
   rates. Pharmaceutical Statistics 2017; 16:334-348.
+
+  Laud PJ. Corrigendum: Equal-tailed confidence intervals for comparison of
+  rates. Pharmaceutical Statistics 2018; 17:290-293.
 
   Laud PJ, Dane A. Confidence intervals for the difference between
   independent binomial proportions: comparison using a graphical approach and
@@ -182,6 +294,10 @@ Laud PJ. Equal-tailed confidence intervals for comparison of
   Gart JJ, Nam Jm. Approximate interval estimation of the difference in
   binomial parameters: correction for skewness and extension to multiple
   tables. Biometrics 1990; 46(3):637-643.
+
+  Tang Y. Score confidence intervals and sample sizes for stratified
+  comparisons of binomial proportions. Statistics in Medicine 2020;
+  39:3427–3457.
 }
 \author{
 Pete Laud, \email{p.j.laud@sheffield.ac.uk}

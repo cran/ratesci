@@ -6,9 +6,12 @@
 #' Poisson rates. Includes score-based methods with (or without) skewness
 #' correction, developed from the Miettinen-Nurminen and Gart-Nam methods,
 #' and the "Method of Variance Estimates Recovery", originating from Newcombe.
-#' For the single-stratum case, the SCAS (skewness-corrected asymptotic score)
+#' For the single-stratum case, the skewness-corrected asymptotic score (SCAS)
 #' method is recommended (Laud 2017), on the basis of superior equal-tailed
-#' coverage.
+#' coverage. Hypothesis tests (a corrected version of the Farrington-Manning
+#' test) follow naturally from the score-based methods, and are equivalent to
+#' the Cochran-Mantel-Haenszel (CMH) test if the skewness correction is
+#' omitted.
 #'
 #' @section ratesci functions:
 #' \itemize{
@@ -33,6 +36,22 @@
 #' Laud PJ. Equal-tailed confidence intervals for comparison of
 #' rates. Pharmaceutical Statistics 2017; 16:334-348.
 #'
+#' Laud PJ. Corrigendum: Equal-tailed confidence intervals for comparison of
+#' rates. Pharmaceutical Statistics 2018; 17:290-293.
+#'
+#' Tang Y. Score confidence intervals and sample sizes for stratified
+#' comparisons of binomial proportions. Statistics in Medicine 2020;
+#' 39:3427–3457.
+#'
+#' Tang Y. Comments on “Equal-tailed confidence intervals for
+#' comparison of rates”. Pharmaceutical Statistics 2021;
+#' online ahead of print.
+#'
+#' Laud PJ. Author's reply to the letter to the editor by Yongqiang Tang:
+#' Comments on “Equal-tailed confidence intervals for
+#' comparison of rates”. Pharmaceutical Statistics 2021;
+#' online ahead of print.
+#'
 #' Miettinen OS, Nurminen M. Comparative analysis of two rates. Statistics in
 #' Medicine 1985; 4:213-226.
 #'
@@ -47,6 +66,11 @@
 #' Gart JJ, Nam JM. Approximate interval estimation of the difference in
 #' binomial parameters: correction for skewness and extension to multiple
 #' tables. Biometrics 1990; 46(3):637-643.
+#'
+#' Farrington CP, Manning G. Test statistics and sample size formulae
+#' for comparative binomial trials with null hypothesis of non-zero risk
+#' difference or non-unity relative risk. Statistics in Medicine 1990;
+#' 9(12):1447–1454.
 #'
 #' Newcombe RG. Interval estimation for the difference between independent
 #' proportions: comparison of eleven methods. Statistics in Medicine 1998;
