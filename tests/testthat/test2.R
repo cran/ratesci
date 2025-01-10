@@ -88,24 +88,27 @@ for (a in 0:n) {
     }
   }
 }
+combos <- combos[rowSums(combos) == n,]
 
 test_that("p-values consistent with paired confidence interval", {
   expect_equal(
-    (sapply(1:dim(combos)[1], function(i) pairbinci(
-      x = combos[i, ], contrast = "RD")$estimates[1] > 0)),
-    (sapply(1:dim(combos)[1], function(i) pairbinci(
-      x = combos[i, ], contrast = "RD")$pval[, "pval_right"] < 0.025))
+    (sapply(1:dim(combos)[1],
+            function(i) pairbinci(x = combos[i, ], contrast = "RD", method_RD = "Score")$estimates[1] > 0
+            )),
+    (sapply(1:dim(combos)[1],
+            function(i) pairbinci(x = combos[i, ], contrast = "RD", method_RD = "Score")$pval[, "pval_right"] < 0.025
+            ))
   )
 })
 for (contrast in c("RR", "OR")) {
   test_that("p-values consistent with paired confidence interval", {
     expect_equal(
-      (sapply(1:dim(combos)[1], function(i) pairbinci(
-        x = combos[i, ], contrast = contrast, method_OR = "SCAS"
-        )$estimates[1] > 1)),
-      (sapply(1:dim(combos)[1], function(i) pairbinci(
-        x = combos[i, ], contrast = contrast, method_OR = "SCAS"
-        )$pval[, "pval_right"] < 0.025))
+      unname(sapply(1:dim(combos)[1],
+              function(i) pairbinci(x = combos[i, ], contrast = contrast,
+                                    method_OR = "SCAS")$estimates[, "Lower"] > 1)),
+      unname(sapply(1:dim(combos)[1],
+              function(i) pairbinci(x = combos[i, ], contrast = contrast,
+                                    method_OR = "SCAS")$pval[, "pval_right"] < 0.025))
     )
   })
 }

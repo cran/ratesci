@@ -48,18 +48,23 @@ contrast="p" gives an interval for the single proportion or rate x1/n1.}
 
 \item{cc}{Number or logical (default FALSE) specifying (amount of) continuity
 correction. Numeric value is taken as the gamma parameter in Laud 2017,
-Appendix S2 (default 0.5 if cc = TRUE).
+Appendix S2 (default 0.5 for 'conventional' correction if cc = TRUE).
 IMPORTANT NOTES:
-1) This is a 'continuity correction' aimed at approximating strictly
+\enumerate{
+\item This is a 'continuity correction' aimed at approximating strictly
 conservative coverage, NOT for dealing with zero cell counts. Such
 'sparse data adjustments' are not needed in the score method,
-except to deal with double-zero cells for RD (& double-100% cells for
+except to deal with double-zero cells for RD (& double-100\% cells for
 binomial RD & RR) with IVS/INV weights.
-2) The continuity corrections provided here have not been fully tested for
-stratified methods.}
+\item The continuity corrections provided here have not been fully tested for
+stratified methods, but are found to match the Mantel-Haenszel corrected test,
+when cc = 0.5 for any of the binomial contrasts. Flexibility is included for
+a less conservative correction, such as cc = 0.25 suggested in Laud 2017
+(see Appendix S3.4), or cc = 3/16 = 0.1875 in Mehrotra & Railkar (2000)
+}}
 
 \item{theta0}{Number to be used in a one-sided significance test (e.g.
-non-inferiority margin). 1-sided p-value will be <0.025 iff 2-sided 95\% CI
+non-inferiority margin). 1-sided p-value will be <0.025 iff 2-sided 95\\% CI
 excludes theta0. By default, a two-sided test against theta0 = 0 (for RD)
 or 1 (for RR/OR) is also output.}
 
@@ -90,9 +95,12 @@ stratified = "TRUE":
 "IVS" = Inverse Variance of Score (see Laud 2017 for details),
 "INV" = Inverse Variance (bcf omitted, default for contrast = "OR"),
 "MH" = Mantel-Haenszel (default for contrast = "RD" or "RR"),
-"MN" = Miettinen-Nurminen iterative weights.
-For CI consistent with a CMH test, select skew = FALSE and use
-MH weighting for RD/RR and IVS for OR.}
+"MN" = Miettinen-Nurminen weights.
+(similar to MH for contrast = "RD" or "RR",
+similar to INV for contrast = "OR")
+For CI consistent with a CMH test, select skew = FALSE, random = FALSE,
+and use default MH weighting for RD/RR and INV for OR.
+Weighting = 'MN' also matches the CMH test.}
 
 \item{MNtol}{Numeric value indicating convergence tolerance to be used in
 iteration with weighting = "MN".}
@@ -105,16 +113,16 @@ iteration with weighting = "MN".}
 }
 \value{
 A list containing the following components: \describe{
-  \item{estimates}{a matrix containing estimates of the rates in each group
-  and of the requested contrast, with its confidence interval} \item{pval}{a
-  matrix containing details of the corresponding 2-sided significance test
-  against the null hypothesis that p_1 = p_2, and one-sided significance
-  tests against the null hypothesis that theta >= or <= theta0}
-  \item{call}{details of the function call} } If stratified = TRUE, the
-  following outputs are added: \describe{ \item{Qtest}{a vector of values
-  describing and testing heterogeneity} \item{weighting}{a string indicating
-  the selected weighting method} \item{stratdata}{a matrix containing stratum
-  estimates and weights}}
+\item{estimates}{a matrix containing estimates of the rates in each group
+and of the requested contrast, with its confidence interval} \item{pval}{a
+matrix containing details of the corresponding 2-sided significance test
+against the null hypothesis that p_1 = p_2, and one-sided significance
+tests against the null hypothesis that theta >= or <= theta0}
+\item{call}{details of the function call} } If stratified = TRUE, the
+following outputs are added: \describe{ \item{Qtest}{a vector of values
+describing and testing heterogeneity} \item{weighting}{a string indicating
+the selected weighting method} \item{stratdata}{a matrix containing stratum
+estimates and weights}}
 }
 \description{
 Wrapper function for the SCAS method. Score-based confidence intervals for
@@ -127,4 +135,14 @@ Vector inputs may also be combined into a single stratified analysis (e.g.
 meta-analysis). This method assumes the contrast is constant across strata
 (fixed effects).  For a 'random-effects' method use tdasci (or scoreci with
 random = TRUE).
+}
+\references{
+Laud PJ. Equal-tailed confidence intervals for comparison of
+rates. Pharmaceutical Statistics 2017; 16:334-348.
+
+Laud PJ. Corrigendum: Equal-tailed confidence intervals for comparison of
+rates. Pharmaceutical Statistics 2018; 17:290-293.
+}
+\author{
+Pete Laud, \email{p.j.laud@sheffield.ac.uk}
 }

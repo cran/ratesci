@@ -8,6 +8,7 @@
 #' event rates.  Also allows more general Beta and Gamma priors for an
 #' approximate Bayesian confidence interval incorporating prior beliefs about
 #' the group event rates.
+#' This function is vectorised in x1, x2, n1, and n2.
 #'
 #' @param x1,x2 Numeric vectors of numbers of events in group 1 & group 2
 #'   respectively.
@@ -18,8 +19,7 @@
 #'   Poisson rates require only a1, a2.
 #' @param cc Number or logical specifying (amount of) continuity correction
 #'   (default FALSE). Numeric value is taken as the gamma parameter in Laud 2017,
-#'   Appendix S2 (default 0.5 if cc=TRUE). Forced equal to 0.5 if type="exact".
-#'   NB: cc currently not implemented for type="wilson".
+#'   Appendix S2 (default 0.5 if cc = TRUE). Forced equal to 0.5 if type = "exact".
 #' @param contrast Character string indicating the contrast of interest: "RD" =
 #'   rate difference (default), "RR" = rate ratio, "OR" = odds ratio.
 #'   contrast="p" gives an interval for the single proportion x1/n1.
@@ -28,14 +28,15 @@
 #'   "jeff" = Jeffreys equal-tailed intervals (default);
 #'   "exact" = Clopper-Pearson/Garwood exact intervals (note this does NOT
 #'   result in a strictly conservative interval for the contrast, except for
-#'   contrast='p'. The scoreci function with cc=TRUE is recommended as a
+#'   contrast = "p". The scoreci function with cc = TRUE is recommended as a
 #'   superior approximation of 'exact' methods);
-#'   "midp" = mid-p intervals (to be added);
-#'   "SCAS" = SCAS non-iterative intervals (to be added);
+#'   "midp" = mid-p intervals;
+#'   "SCAS" = SCAS non-iterative intervals;
 #'   "wilson" = Wilson score intervals (as per Newcombe 1998).
+#'              (Rao score is used for distrib = "poi")
 #'   NB: "wilson" option is included only for legacy validation against previous
-#'   published method by Newcombe. It is not recommended, as type="jeff"
-#'   achieves much better coverage properties.
+#'   published method by Newcombe. It is not recommended, as type = "jeff"
+#'   or other equal-tailed options achieve much better coverage properties.
 #' @param adj Logical (default FALSE) indicating whether to apply the boundary
 #'   adjustment for Jeffreys intervals recommended on p108 of Brown et al.
 #'   (type = "jeff" only: set to FALSE if using informative priors)
@@ -87,8 +88,9 @@ moverci <- function(x1,
                     type = "jeff",
                     adj = FALSE,
                     ...) {
-  if (!(tolower(substr(type, 1, 4)) %in% c("jeff", "wils", "exac"))) {
-    print("Type must be one of 'jeffreys', 'wilson' or 'exact'")
+  if (!(tolower(substr(type, 1, 4)) %in%
+    c("jeff", "wils", "exac", "scas", "midp"))) {
+    print("Type must be one of 'jeff', 'wilson', 'SCAS', 'midp' or 'exact'")
     stop()
   }
   if (!(tolower(substr(distrib, 1, 3)) %in% c("bin", "poi"))) {
@@ -166,28 +168,59 @@ moverci <- function(x1,
     } else {
       j2 <- NULL
     }
-    p1hat <- j1[, 3]
-    p2hat <- j2[, 3]
+    p1hat <- j1[, 2]
+    p2hat <- j2[, 2]
   } else if (type == "wilson") {
     # or use Wilson intervals as per Newcombe 1998
-    # (NB could add cc here for completeness)
-    j1 <- quadroot(
-      a = 1 + z^2 / n1, b = -(2 * p1hat + z^2 / n1),
-      c_ = p1hat^2
+    j1 <- wilsonci(
+      x = x1, n = n1, cc = cc, level = level,
+      distrib = distrib
     )
     if (contrast != "p") {
-      j2 <- quadroot(
-        a = 1 + z^2 / n2, b = -(2 * p2hat + z^2 / n2),
-        c_ = p2hat^2
+      j2 <- wilsonci(
+        x = x2, n = n2, cc = cc, level = level,
+        distrib = distrib
       )
     } else {
       j2 <- NULL
     }
+  } else if (type == "SCAS") {
+    # or use SCAS intervals
+    j1 <- rateci(
+      x = x1, n = n1, cc = cc, level = level,
+      distrib = distrib
+    )[[1]]
+    if (contrast != "p") {
+      j2 <- rateci(
+        x = x2, n = n2, cc = cc, level = level,
+        distrib = distrib
+      )[[1]]
+    } else {
+      j2 <- NULL
+    }
+    p1hat <- j1[, 2]
+    p2hat <- j2[, 2]
+  } else if (type == "midp") {
+    # or use mid-p intervals
+    j1 <- rateci(
+      x = x1, n = n1, cc = cc, level = level,
+      distrib = distrib
+    )[[3]]
+    if (contrast != "p") {
+      j2 <- rateci(
+        x = x2, n = n2, cc = cc, level = level,
+        distrib = distrib
+      )[[3]]
+    } else {
+      j2 <- NULL
+    }
+    p1hat <- j1[, 2]
+    p2hat <- j2[, 2]
   }
   l1 <- j1[, 1]
-  u1 <- j1[, 2]
+  u1 <- j1[, 3]
   l2 <- j2[, 1]
-  u2 <- j2[, 2]
+  u2 <- j2[, 3]
 
   if (contrast == "p") {
     lower <- l1
@@ -242,6 +275,7 @@ moverci <- function(x1,
     }
   }
   CI <- cbind(Lower = lower, Estimate = est, Upper = upper)
+  row.names(CI) <- NULL
   CI
 }
 
@@ -330,7 +364,7 @@ jeffreysci <- function(x,
     }
     CI_upper <- qgamma(1 - alpha / 2, (x + (ai + cc)), scale = 1 / n)
   }
-  CI <- cbind(Lower = CI_lower, Upper = CI_upper, est = est)
+  CI <- cbind(Lower = CI_lower, est = est, Upper = CI_upper)
   CI
 }
 
@@ -353,6 +387,7 @@ jeffreysci <- function(x,
 #'   each group (default ai = bi = 0.5 for Jeffreys uninformative priors). Gamma
 #'   priors for Poisson rates require only a1, a2.
 #' @inheritParams moverci
+#' @author Pete Laud, \email{p.j.laud@@sheffield.ac.uk}
 #' @export
 moverbci <- function(x1,
                      n1,
@@ -386,7 +421,11 @@ moverbci <- function(x1,
   )
 }
 
-# Internal function
+#' Internal function - superseded by new wilsonci function
+#'
+#' @author Pete Laud, \email{p.j.laud@@sheffield.ac.uk}
+#'
+#' @noRd
 quadroot <- function(a, b, c_) {
   # GET ROOTS OF A QUADRATIC EQUATION
   r1x <- (-b + sqrt(b^2 - 4 * a * c_)) / (2 * a)

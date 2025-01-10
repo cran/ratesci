@@ -1,3 +1,50 @@
+# ratesci 0.5.0 (2025-01-10)
+
+## New features
+### In `pairbinci()`:
+* `cc` continuity correction is now available for all methods for all contrasts. 
+* `cctype` controls the type of correction to apply for `contrast` = "RR".
+* New default `method_RD` = "Score_closed" for non-iterative calculation of 
+  the Tango score interval for `contrast` = "RD". Thanks to Tony Yang for 
+  permission to use the code in his 2013 paper.
+* New default `method_RR` = "Score_closed" for non-iterative calculation of 
+  the Tang score interval for `contrast` = "RR". Thanks to Guogen Shan for 
+  contributing code via email.
+* Added paired MOVER methods with `method_RD` = "MOVER" and `method_RR` = "MOVER".
+  Also "MOVER_newc" incorporates Newcombe's correlation correction.
+* Added `moverbase`, for specifying different versions of the MOVER methods 
+  (Wilson, Jeffreys, midp or SCAS).
+* Added "jeff" and "wilson" `method_OR` options for transformed binomial 
+  methods for OR.
+* Confirmed and documented that the 2-sided significance test is equivalent 
+  to the McNemar test (with or without continuity correction).
+### In `scoreci()`:
+* Confirmed that continuity corrections for all stratified (fixed-effects) 
+  binomial contrasts are consistent with the Mantel-Haenszel correction.
+* Updated heterogeneity test to consistently omit non-informative 
+  (but non-empty) strata, and output the degrees of freedom.
+### In `moverci()`:
+* Added continuity correction for `type` = "wilson".
+* Added options for `type` = "SCAS" and "midp" intervals.
+* Standardised output to include lower CL, midpoint, upper CL, in that order.
+
+## Bug fixes
+### In `scoreci()`:
+* Improved handling of special cases for MN weighting (#25, thanks to 
+  Vincent Jaquet for reporting the issue and proposed solution. 
+  Also #27 for RR, thanks to @lovestat.) 
+  As a result, double-zero strata need not be excluded when weighting = "MN".
+### In `moverci()`:
+* Corrected calculation of score intervals for single Poisson rate, using 
+  Rao score interval.
+* Same correction affects MOVER method for comparison of Poisson rates
+ [i.e. `moverci()` with `distrib` = "poi" and `type` = "wilson"]
+
+## Other
+* Improved documentation of hypothesis tests and continuity corrections, clarifying links to Chi-squared tests and CMH test with selected weights.
+* Correction to documentation of default weights for OR.
+* Added tests confirming equivalence of iterative and closed-form methods in pairbinci.
+
 # ratesci 0.4-0 (2021-12-04)
 
 ## New features

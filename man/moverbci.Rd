@@ -44,8 +44,7 @@ contrast="p" gives an interval for the single proportion x1/n1.}
 
 \item{cc}{Number or logical specifying (amount of) continuity correction
 (default FALSE). Numeric value is taken as the gamma parameter in Laud 2017,
-Appendix S2 (default 0.5 if cc=TRUE). Forced equal to 0.5 if type="exact".
-NB: cc currently not implemented for type="wilson".}
+Appendix S2 (default 0.5 if cc = TRUE). Forced equal to 0.5 if type = "exact".}
 
 \item{...}{Additional arguments.}
 }
@@ -57,4 +56,7 @@ only). (developed from Newcombe, Donner & Zou, Li et al, and Fagerland &
 Newcombe, and generalised as "MOVER-B" in forthcoming publication) including
 special case "MOVER-J" using non-informative priors with optional continuity
 correction.  This function is vectorised in x1, x2, n1, and n2.
+}
+\author{
+Pete Laud, \email{p.j.laud@sheffield.ac.uk}
 }
