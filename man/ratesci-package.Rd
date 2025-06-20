@@ -4,26 +4,30 @@
 \name{ratesci-package}
 \alias{ratesci}
 \alias{ratesci-package}
-\title{ratesci: Confidence Intervals for Comparisons of Binomial or Poisson Rates}
+\title{ratesci: Confidence Intervals and Tests for Comparisons of Binomial Proportions or Poisson Rates}
 \description{
-Computes confidence intervals for the rate (or risk) difference ('RD') or rate ratio (or relative risk, 'RR') for binomial proportions or Poisson rates, or for odds ratio ('OR', binomial only). Also confidence intervals for a single binomial or Poisson rate, and intervals for matched pairs. Includes skewness-corrected asymptotic score ('SCAS') methods, which have been developed in Laud (2017) \doi{10.1002/pst.1813} from Miettinen & Nurminen (1985) \doi{10.1002/sim.4780040211} and Gart & Nam (1988) \doi{10.2307/2531848}. The same score produces hypothesis tests analogous to the test for binomial RD and RR by Farrington & Manning (1990) \doi{10.1002/sim.4780091208}, or the McNemar test for paired data. The package also includes MOVER methods (Method Of Variance Estimates Recovery) for all contrasts, derived from the Newcombe method but with options to use equal-tailed intervals in place of the Wilson score method, and generalised for Bayesian applications incorporating prior information. So-called 'exact' methods for strictly conservative coverage are approximated using continuity corrections, and the amount of correction can be selected to avoid over-conservative coverage. Also includes methods for stratified calculations (e.g. meta-analysis), either assuming fixed effects (matching the CMH test) or incorporating stratum heterogeneity.
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
+Computes confidence intervals for binomial or Poisson rates and their differences or ratios. Including the rate (or risk) difference ('RD') or rate ratio (or relative risk, 'RR') for binomial proportions or Poisson rates, and odds ratio ('OR', binomial only). Also confidence intervals for RD, RR or OR for paired binomial data, and estimation of a proportion from clustered binomial data. Includes skewness-corrected asymptotic score ('SCAS') methods, which have been developed in Laud (2017) \doi{10.1002/pst.1813} from Miettinen and Nurminen (1985) \doi{10.1002/sim.4780040211} and Gart and Nam (1988) \doi{10.2307/2531848}, and in Laud (2025, under review) for paired proportions. The same score produces hypothesis tests that are improved versions of the non-inferiority test for binomial RD and RR by Farrington and Manning (1990) \doi{10.1002/sim.4780091208}, or a generalisation of the McNemar test for paired data. The package also includes MOVER methods (Method Of Variance Estimates Recovery) for all contrasts, derived from the Newcombe method but with options to use equal-tailed intervals in place of the Wilson score method, and generalised for Bayesian applications incorporating prior information. So-called 'exact' methods for strictly conservative coverage are approximated using continuity adjustments, and the amount of adjustment can be selected to avoid over-conservative coverage. Also includes methods for stratified calculations (e.g. meta-analysis), either with fixed effect assumption (matching the CMH test) or incorporating stratum heterogeneity.
 }
 \section{ratesci functions}{
 
 \itemize{
-\item scoreci: for score-based confidence intervals
-\item scasci: wrapper function to compute SCAS interval
-\item tdasci: wrapper function to compute TDAS random effects stratified
+\item scoreci(): for score-based confidence intervals
+\item scasci(): wrapper function to compute SCAS interval
+\item tdasci(): wrapper function to compute TDAS random effects stratified
 interval
-\item moverci: for the MOVER method
-\item moverbci: wrapper function to compute MOVER-B interval
-\item jeffreysci: wrapper function to compute Jeffreys interval for a
+\item moverci(): for the MOVER method
+\item moverbci(): wrapper function to compute MOVER-B interval
+\item jeffreysci(): wrapper function to compute Jeffreys interval for a
 single rate
-\item scaspci: non-iterative SCAS method for a single rate
-\item rateci: wrapper function for SCAS, Jeffreys or 'exact' methods
+\item scaspci(): non-iterative SCAS method for a single rate
+\item rateci(): wrapper function for SCAS, Jeffreys or 'exact' methods
 for a single rate
-\item pairbinci: for paired binomial data (includes asymptotic score and
+\item pairbinci(): for paired binomial data (includes asymptotic score and
 MOVER options)
+\item clusterpci(): for estimation of binomial proportions based on
+clustered data
 }
 }
 
@@ -39,13 +43,11 @@ comparisons of binomial proportions. Statistics in Medicine 2020;
 39:3427–3457.
 
 Tang Y. Comments on “Equal-tailed confidence intervals for
-comparison of rates”. Pharmaceutical Statistics 2021;
-online ahead of print.
+comparison of rates”. Pharmaceutical Statistics 2021;20:1288-1292.
 
 Laud PJ. Author's reply to the letter to the editor by Yongqiang Tang:
 Comments on “Equal-tailed confidence intervals for
-comparison of rates”. Pharmaceutical Statistics 2021;
-online ahead of print.
+comparison of rates”. Pharmaceutical Statistics 2021; 20:1293-1297
 
 Miettinen OS, Nurminen M. Comparative analysis of two rates. Statistics in
 Medicine 1985; 4:213-226.
@@ -74,11 +76,27 @@ proportions: comparison of eleven methods. Statistics in Medicine 1998;
 Donner A, Zou G. Closed-form confidence intervals for functions of the
 normal mean and standard deviation. Statistical Methods in Medical Research
 2012; 21(4):347-359.
+
+Tango T. Equivalence test and confidence interval for the difference
+in proportions for the paired-sample design.
+Statistics in Medicine 1998; 17:891-908
+
+Tang N-S, Tang M-L, Chan ISF. On tests of equivalence via non-unity
+relative risk for matched-pair design.
+Statistics in Medicine 2003; 22:1217-1233
+
+Laud PJ. Improved confidence intervals and tests for paired binomial
+proportions. (2025, Under review)
+
+Saha K, Miller D and Wang S. A comparison of some approximate confidence
+intervals for a single proportion for clustered binary outcome data.
+Int J Biostat 2016; 12:1–18.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/petelaud/ratesci}
+  \item \url{https://petelaud.github.io/ratesci/}
   \item Report bugs at \url{https://github.com/petelaud/ratesci/issues}
 }
 

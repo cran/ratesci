@@ -4,21 +4,21 @@
 #' comparisons of binomial and Poisson rates.
 #'
 #' @section ratesci functions:
-#' \itemize{
-#'   \item scoreci: for score-based confidence intervals
-#'   \item scasci: wrapper function to compute SCAS interval
-#'   \item tdasci: wrapper function to compute TDAS random effects stratified
+#'   * scoreci(): for score-based confidence intervals
+#'   * scasci(): wrapper function to compute SCAS interval
+#'   * tdasci(): wrapper function to compute TDAS random effects stratified
 #'    interval
-#'   \item moverci: for the MOVER method
-#'   \item moverbci: wrapper function to compute MOVER-B interval
-#'   \item jeffreysci: wrapper function to compute Jeffreys interval for a
+#'   * moverci(): for the MOVER method
+#'   * moverbci(): wrapper function to compute MOVER-B interval
+#'   * jeffreysci(): wrapper function to compute Jeffreys interval for a
 #'   single rate
-#'   \item scaspci: non-iterative SCAS method for a single rate
-#'   \item rateci: wrapper function for SCAS, Jeffreys or 'exact' methods
+#'   * scaspci(): non-iterative SCAS method for a single rate
+#'   * rateci(): wrapper function for SCAS, Jeffreys or 'exact' methods
 #'   for a single rate
-#'   \item pairbinci: for paired binomial data (includes asymptotic score and
+#'   * pairbinci(): for paired binomial data (includes asymptotic score and
 #'   MOVER options)
-#' }
+#'   * clusterpci(): for estimation of binomial proportions based on
+#'   clustered data
 #' @name ratesci-package
 #' @references
 #' Laud PJ. Equal-tailed confidence intervals for comparison of
@@ -32,13 +32,11 @@
 #' 39:3427–3457.
 #'
 #' Tang Y. Comments on “Equal-tailed confidence intervals for
-#' comparison of rates”. Pharmaceutical Statistics 2021;
-#' online ahead of print.
+#' comparison of rates”. Pharmaceutical Statistics 2021;20:1288-1292.
 #'
 #' Laud PJ. Author's reply to the letter to the editor by Yongqiang Tang:
 #' Comments on “Equal-tailed confidence intervals for
-#' comparison of rates”. Pharmaceutical Statistics 2021;
-#' online ahead of print.
+#' comparison of rates”. Pharmaceutical Statistics 2021; 20:1293-1297
 #'
 #' Miettinen OS, Nurminen M. Comparative analysis of two rates. Statistics in
 #' Medicine 1985; 4:213-226.
@@ -68,6 +66,20 @@
 #' normal mean and standard deviation. Statistical Methods in Medical Research
 #' 2012; 21(4):347-359.
 #'
+#' Tango T. Equivalence test and confidence interval for the difference
+#' in proportions for the paired-sample design.
+#' Statistics in Medicine 1998; 17:891-908
+#'
+#' Tang N-S, Tang M-L, Chan ISF. On tests of equivalence via non-unity
+#' relative risk for matched-pair design.
+#' Statistics in Medicine 2003; 22:1217-1233
+#'
+#' Laud PJ. Improved confidence intervals and tests for paired binomial
+#' proportions. (2025, Under review)
+#'
+#' Saha K, Miller D and Wang S. A comparison of some approximate confidence
+#' intervals for a single proportion for clustered binary outcome data.
+#' Int J Biostat 2016; 12:1–18.
 
 ## usethis namespace: start
 ## usethis namespace: end

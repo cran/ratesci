@@ -4,7 +4,7 @@
 \alias{rateci}
 \title{Selected confidence intervals for the single binomial or Poisson rate.}
 \usage{
-rateci(x, n, distrib = "bin", level = 0.95, cc = FALSE, precis = 6)
+rateci(x, n, distrib = "bin", level = 0.95, cc = FALSE)
 }
 \arguments{
 \item{x}{Numeric vector of number of events.}
@@ -19,23 +19,29 @@ data: "bin" = binomial (default), "poi" = Poisson.}
 0.95).}
 
 \item{cc}{Number or logical (default FALSE) specifying continuity
-correction.}
-
-\item{precis}{Number (default 6) specifying precision (i.e. number of decimal
-places) to be used in optimisation subroutine for the SCAS and exact methods.}
+adjustment.}
 }
 \value{
 A list containing, for each method, a matrix containing lower and upper
-confidence limits for each value of x and n. Methods shown depend on the cc
-parameter, which specifies whether the continuity correction is applied to
+confidence limits and point estimate of p for each value of x and n.
+Methods shown depend on the cc
+parameter, which specifies whether the continuity adjustment is applied to
 the SCAS and Jeffreys methods. The corresponding 'exact' method is
-Clopper-Pearson/Garwood if cc == TRUE and mid-p if cc == FALSE.
+Clopper-Pearson/Garwood if cc = TRUE and mid-p if cc = FALSE.
+The last list item contains details of the function call.
 }
 \description{
 Confidence intervals for the single binomial or Poisson rate. Including
-SCAS or Jeffreys intervals, with or without continuity correction, and
+SCAS or Jeffreys intervals, with or without continuity adjustment, and
 'exact' Clopper-Pearson/Garwood or mid-p intervals.
 This function is vectorised in x, n.
+}
+\references{
+Laud PJ. Equal-tailed confidence intervals for comparison of
+rates. Pharmaceutical Statistics 2017; 16:334-348. (Appendix A.4)
+
+Brown LD, Cai TT and DasGupta A. Interval estimation for a binomial
+proportion. Statistical Science 2001; 16(2):101-133.
 }
 \author{
 Pete Laud, \email{p.j.laud@sheffield.ac.uk}

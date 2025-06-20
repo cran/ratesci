@@ -6,77 +6,86 @@
 \usage{
 pairbinci(
   x,
-  contrast = "RD",
   level = 0.95,
+  contrast = "RD",
+  method = ifelse(contrast == "OR", "SCASp", "Score"),
+  moverbase = ifelse(method \%in\% c("MOVER", "MOVER_newc", "BP"), "jeff", NULL),
+  bcf = TRUE,
+  skew = TRUE,
   cc = FALSE,
-  cctype = "constant",
-  method_RD = "Score_closed",
-  method_RR = "Score_closed",
-  method_OR = "SCAS",
-  moverbase = "SCAS",
   theta0 = NULL,
-  precis = 6
+  precis = 6,
+  warn = TRUE,
+  method_RD = NULL,
+  method_RR = NULL,
+  method_OR = NULL,
+  cctype = NULL,
+  ...
 )
 }
 \arguments{
 \item{x}{A numeric vector object specified as c(a, b, c, d)
-where:
+where: \cr
 a is the number of pairs with the event (e.g. success) under both
-conditions (e.g. treated/untreated, or case/control)
-b is the count of the number with the event on condition 1 only (= n12)
-c is the count of the number with the event on condition 2 only (= n21)
-d is the number of pairs with no event under both conditions
+conditions (e.g. treated/untreated, or case/control) \cr
+b is the count of the number with the event on condition 1 only (= x12) \cr
+c is the count of the number with the event on condition 2 only (= x21) \cr
+d is the number of pairs with no event under both conditions \cr
 (Note the order of a and d is only important for contrast="RR".)}
-
-\item{contrast}{Character string indicating the contrast of interest:
-"RD" = rate difference (default), "RR" = rate ratio, "OR" = odds ratio.}
 
 \item{level}{Number specifying confidence level (between 0 and 1, default
 0.95).}
 
-\item{cc}{Number or logical (default FALSE) specifying (amount of) continuity
-correction. When a score-based method is used, cc = 0.5 corresponds to the
-continuity-corrected McNemar test.}
+\item{contrast}{Character string indicating the contrast of interest: \cr
+"RD" = rate difference (default); \cr
+"RR" = rate ratio; \cr
+"OR" = conditional odds ratio.}
 
-\item{cctype}{Character string indicating the type of continuity correction
-("constant" or "delrocco") to be applied for contrast = "RR".
-(Note: both options produce non-equivariant intervals, an improved
-correction is currently under evaluation - watch this space.)}
-
-\item{method_RD}{Character string indicating the confidence interval method
-to be used for contrast = "RD". "Score" = iterative Tango asymptotic score,
-"Score_closed" = closed form solution for Tango interval (default),
-"MOVER" = hybrid MOVER method for paired RD (as per "method 8" in
-Newcombe, but with a choice of input methods - see moverbase),
-"MOVER_newc" = hybrid MOVER method with "correction" to correlation
-estimate (Newcombe's "method 10"),
-"TDAS" = t-distribution asymptotic score (experimental method, seems to
-struggle with low numbers).}
-
-\item{method_RR}{Character string indicating the confidence interval method
-to be used for contrast = "RR". "Score" = iterative Tang asymptotic score,
-"Score_closed" = closed form solution for Tang interval (default),
-"MOVER" = hybrid MOVER method for paired RR,
-"MOVER_newc" = hybrid MOVER method with "correction" to correlation
-estimate from Newcombe's RD method,
-"TDAS" = t-distribution asymptotic score (experimental method, seems to
-struggle with low numbers).}
-
-\item{method_OR}{Character string indicating the confidence interval method
-to be used for contrast = "OR", all of which are based on transformation of
-an interval for a single proportion b/(b+c):
-"SCAS" = transformed skewness-corrected score (default),
-"jeff" = transformed Jeffreys,
-"midp" = transformed mid-p,
+\item{method}{Character string indicating the confidence interval method
+to be used. The following are available for \code{contrast = "RD"} or \code{"RR"}: \cr
+"Score" = (default) asymptotic score class of methods including Tango
+(for RD) / Tang (for RR), by iterative calculations, with
+optional skewness correction; \cr
+"Score_closed" = closed form solution for Tango/Tang intervals
+(without skewness correction); \cr
+"MOVER" = hybrid MOVER method (as per "method 8" in Newcombe, but with
+a choice of input methods - see moverbase); \cr
+"MOVER_newc" = hybrid MOVER methods with correction to correlation
+estimate (Newcombe's "method 10"); \cr
+"TDAS" = t-distribution asymptotic score (experimental method, now
+deprecated); \cr
+"BP" = Wald with Bonett-Price adjustment for RD, or Hybrid Bonett-Price
+method for RR. \cr
+For \code{contrast = "OR"}, one of the following methods may be selected,
+all of which are based on transformation of an interval for a single
+proportion \code{b/(b+c)}: \cr
+"SCASp" = transformed skewness-corrected score (default); \cr
+"jeff" = transformed Jeffreys; \cr
+"midp" = transformed mid-p; \cr
 "wilson" = transformed Wilson score - included for reference only, not
 recommended.}
 
 \item{moverbase}{Character string indicating the base method used as input
-for the MOVER methods (when method_RR or method_RD = "MOVER"):
-"wilson" = Wilson score (not recommended, known to be skewed),
-"jeff" = Jeffreys equal-tailed interval,
+for the MOVER methods for RD or RR (when method = "MOVER" or "MOVER_newc"),
+and for the Hybrid BP method for RR:
+"jeff" = Jeffreys equal-tailed interval (default),
+"SCASp" = skewness-corrected score,
 "midp" = mid-p,
-"SCAS" = skewness-corrected score (default)}
+"wilson" = Wilson score (not recommended, known to be skewed).}
+
+\item{bcf}{Logical (default FALSE) indicating whether to apply variance bias
+correction in the score denominator. (Under evaluation, manuscript under
+review.)}
+
+\item{skew}{Logical (default TRUE) indicating whether to apply skewness
+correction or not. (Under evaluation, manuscript under review.)
+\itemize{
+\item Only applies for the iterative \code{method = "Score"}.
+}}
+
+\item{cc}{Number or logical (default FALSE) specifying (amount of) continuity
+adjustment. When a score-based method is used, cc = 0.5 corresponds to the
+continuity-corrected McNemar test.}
 
 \item{theta0}{Number to be used in a one-sided significance test (e.g.
 non-inferiority margin). 1-sided p-value will be < 0.025 iff 2-sided 95\\% CI
@@ -85,49 +94,66 @@ theta0 = 0.}
 
 \item{precis}{Number (default 6) specifying precision (i.e. number of decimal
 places) to be used in optimisation subroutine for the confidence interval.}
+
+\item{warn}{Logical (default TRUE) giving the option to suppress warnings.}
+
+\item{method_RD}{(deprecated: parameter renamed to method)}
+
+\item{method_RR}{(deprecated: parameter renamed to method)}
+
+\item{method_OR}{(deprecated: parameter renamed to method)}
+
+\item{cctype}{(deprecated: new equivariant cc method implemented instead.)}
+
+\item{...}{Other arguments.}
 }
 \value{
 A list containing the following components: \describe{
-\item{data}{the input data in 2x2 matrix form}
+\item{data}{the input data in 2x2 matrix form.}
 \item{estimates}{the requested contrast, with its confidence interval and
-the specified confidence level}
+the specified confidence level, along with estimates of the marginal
+probabilities and the correlation coefficient (uncorrected and
+corrected).}
 \item{pval}{the corresponding 2-sided significance test
-against the null hypothesis that p_1 = p_2 (McNemar's test), and one-sided
+against the null hypothesis that p_1 = p_2, and one-sided
 significance tests against the null hypothesis that theta >= or <= theta0
-as specified}}
+as specified.}
+\item{call}{details of the function call.}}
 }
 \description{
-Confidence intervals for the rate (or risk) difference ('RD'),
-rate ratio ('RR') or odds ratio ('OR'), for paired binomial data.
-(For paired Poisson rates, suggest use the tdasci function with distrib = "poi",
-and weighting = "MH", with pairs as strata.)
+Confidence intervals for the rate (or risk) difference ("RD"), rate ratio
+("RR") or conditional odds ratio ("OR"), for paired binomial data. (For
+paired Poisson rates, suggest use the tdasci function with \code{distrib = "poi"},
+and \code{weighting = "MH"}, with pairs as strata.)
 This function applies the score-based Tango and Tang methods for RD and
-RR respectively, with iterative and closed-form versions, as well as an
-experimental method using the stratified TDAS method with pairs as strata.
+RR respectively, with iterative and closed-form versions, and an added
+skewness correction for improved one-sided coverage.
 Also includes MOVER options using the Method of Variance Estimates Recovery
-for paired RD and RR.
+for paired RD and RR, incorporating Newcombe's correlation correction, and
+some simpler methods by Bonett & Price for RD and RR.
 For OR, intervals are produced based on transforming various intervals for
-the single proportion, including SCAS, mid-p and Jeffreys.
-All methods have options for continuity correction, and the magnitude of
-correction can be customised.
+the single proportion, including SCASp, mid-p and Jeffreys.
+All methods have options for continuity adjustment, and the magnitude of
+adjustment can be customised.
 }
 \examples{
-# Data example from Agresti-Min 2005
-pairbinci(x = c(53, 16, 8, 9), contrast = "RD", method_RD = "Score")
-pairbinci(x = c(53, 16, 8, 9), contrast = "RD", method_RD = "TDAS")
-pairbinci(x = c(53, 16, 8, 9), contrast = "RR", method_RR = "Score")
-pairbinci(x = c(53, 16, 8, 9), contrast = "RR", method_RR = "TDAS")
-pairbinci(x = c(53, 16, 8, 9), contrast = "OR", method_OR = "SCAS")
 # Example from Fagerland et al 2014
-pairbinci(x = c(1, 1, 7, 12), contrast = "RD", method_RD = "Score_closed")
-pairbinci(x = c(1, 1, 7, 12), contrast = "RD", method_RD = "MOVER_newc", moverbase = "wilson")
-pairbinci(x = c(1, 1, 7, 12), contrast = "RD", method_RD = "MOVER_newc", moverbase = "SCAS")
-pairbinci(x = c(1, 1, 7, 12), contrast = "RR", method_RR = "Score_closed")
-pairbinci(x = c(1, 1, 7, 12), contrast = "RR", method_RR = "MOVER_newc", moverbase = "wilson")
-pairbinci(x = c(1, 1, 7, 12), contrast = "RR", method_RR = "MOVER_newc", moverbase = "SCAS")
-pairbinci(x = c(1, 1, 7, 12), contrast = "OR", method_OR = "wilson")
-pairbinci(x = c(1, 1, 7, 12), contrast = "OR", method_OR = "midp")
-pairbinci(x = c(1, 1, 7, 12), contrast = "OR", method_OR = "SCAS")
+# SCAS method for RD
+pairbinci(x = c(1, 1, 7, 12), contrast = "RD", method = "Score")
+# Tango method
+pairbinci(x = c(1, 1, 7, 12), contrast = "RD", method = "Score", skew = FALSE, bcf = FALSE)
+# MOVER-NJ method
+pairbinci(x = c(1, 1, 7, 12), contrast = "RD", method = "MOVER_newc", moverbase = "jeff")
+# SCAS for RR
+pairbinci(x = c(1, 1, 7, 12), contrast = "RR", method = "Score")
+# Tang method
+pairbinci(x = c(1, 1, 7, 12), contrast = "RR", method = "Score", skew = FALSE, bcf = FALSE)
+# MOVER-NJ
+pairbinci(x = c(1, 1, 7, 12), contrast = "RR", method = "MOVER_newc", moverbase = "jeff")
+# Transformed SCASp method for OR
+pairbinci(x = c(1, 1, 7, 12), contrast = "OR", method = "SCASp")
+# Transformed Wilson method
+pairbinci(x = c(1, 1, 7, 12), contrast = "OR", method = "wilson")
 
 }
 \references{
@@ -156,6 +182,10 @@ Agresti A, Min Y. Simple improved confidence intervals for
 comparing matched proportions.
 Statistics in Medicine 2005; 24:729-740
 
+Bonett DG, Price RM. Confidence intervals for a ratio of binomial
+proportions based on paired data.
+Statistics in Medicine 2006; 25:3039-3047
+
 Tang M-L, Li H-Q, Tang N-S. Confidence interval construction for proportion
 ratio in paired studies based on hybrid method.
 Statistical Methods in Medical Research 2010; 21(4):361-378
@@ -182,6 +212,13 @@ Statistics in Biosciences 2023; 15:1–30
 Chang P et al. Continuity corrected score confidence interval for the
 difference in proportions in paired data.
 Journal of Applied Statistics 2024; 51-1:139-152
+
+Laud PJ. Comments on "New Confidence Intervals for Relative Risk of Two
+Correlated Proportions" (2023).
+Statistics in Biosciences 2025; https://doi.org/10.1007/s12561-025-09479-4
+
+Laud PJ. Improved confidence intervals and tests for paired binomial
+proportions. (2025, Under review)
 }
 \author{
 Pete Laud, \email{p.j.laud@sheffield.ac.uk}

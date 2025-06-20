@@ -1,0 +1,99 @@
+#' Score confidence intervals for a single binomial rate from clustered data.
+#'
+#' Asymptotic Score confidence intervals for a proportion estimated from
+#' a clustered sample, as decribed by Saha et al. 2016.
+#' With optional skewness correction to improve interval location
+#' (to be evaluated).
+#'
+#' @param x Numeric vector of number of events per cluster.
+#' @param n Numeric vector of sample sizes per cluster.
+#' @param level Number specifying confidence level (between 0 and 1, default
+#'   0.95).
+#' @param skew Logical (default TRUE) indicating whether to apply skewness
+#'   correction or not. (To be evaluated)
+#' @param cc Number or logical (default FALSE) specifying (amount of) continuity
+#'   adjustment. Numeric value is taken as the gamma parameter in Laud 2017,
+#'   Appendix S2 (default 0.5 for 'conventional' adjustment if `cc = TRUE`).
+#' @param theta0 Number to be used in a one-sided significance test (e.g.
+#'   non-inferiority margin). 1-sided p-value will be <0.025 iff 2-sided 95\% CI
+#'   excludes theta0.
+#' @return A list containing the following components: \describe{
+#'   \item{estimates}{the estimate and confidence interval for p and
+#'   the specified confidence level, along with estimates of the ICC and
+#'   the variance inflation factor, xihat.}
+#'   \item{pval}{one-sided significance tests against the null hypothesis that
+#'   theta >= or <= theta0 as specified.}
+#'   \item{call}{details of the function call.}}
+#' @examples
+#'   # Data example from Liang 1992, used in Saha 2016 and Short 2020:
+#'   # Note Saha states the ICC estimate is 0.1871 and Short makes it 0.1855.
+#'   # I agree with Short - CI limits differ from Saha to the 4th dp.
+#'   x <- c(rep(c(0, 1), c(36, 12)),
+#'          rep(c(0, 1, 2), c(15, 7, 1)),
+#'          rep(c(0, 1, 2, 3), c(5, 7, 3, 2)),
+#'          rep(c(0, 1, 2), c(3, 3, 1)),
+#'          c(0, 2, 3, 4, 6))
+#'   n <- c(rep(1, 48),
+#'          rep(2, 23),
+#'          rep(3, 17),
+#'          rep(4, 7),
+#'          rep(6, 5))
+#'   # Wilson-based interval
+#'   clusterpci(x, n, skew = FALSE)
+#'   # Skewness-corrected version
+#'   clusterpci(x, n, skew = TRUE)
+#'   # With continuity adjustment
+#'   clusterpci(x, n, skew = FALSE, cc = TRUE)
+#' @author Pete Laud, \email{p.j.laud@@sheffield.ac.uk}
+#' @references
+#'   Saha K, Miller D and Wang S. A comparison of some approximate confidence
+#'   intervals for a single proportion for clustered binary outcome data.
+#'   Int J Biostat 2016; 12:1–18
+#'
+#'   Short MI et al. A novel confidence interval for a single proportion
+#'   in the presence of clustered binary outcome data.
+#'   Stat Meth Med Res 2020; 29(1):111–121
+#' @export
+clusterpci <- function(x,
+                       n,
+                       level = 0.95,
+                       skew = TRUE,
+                       cc = FALSE,
+                       theta0 = 0.5) {
+
+  totx <- sum(x)
+
+  # Notation as per Saha et al.
+  totn <- sum(n)
+  k <- length(n)
+  BMS <- (sum(x^2/n) - totx^2 / totn) / (k - 1)
+  WMS <- (totx - sum(x^2/n)) / sum(n - 1)
+  nstar <- (totn^2 - sum(n^2)) / ((k - 1) * totn)
+  phihat <- (BMS - WMS) / (BMS + (nstar - 1) * WMS) # ICC
+  xihat <- sum(n * (1 + (n-1)*phihat)) / totn # Variance inflation factor
+
+  if (skew == TRUE) {
+    out <- scaspci(totx, totn, xihat = xihat, level = level, bcf = FALSE, cc = cc)$estimates
+  } else {
+    out <- wilsonci(totx, totn, xihat = xihat, level = level, cc = cc)
+  }
+
+  scoreth0 <- scoretheta(
+    theta = theta0, x1 = totx, x2 = NULL, n1 = totn, n2 = NULL,
+    contrast = "p", bcf = FALSE, xihat = xihat,
+    distrib = "bin", skew = skew, cc = cc, level = level
+  )$score
+  pval_left <- pnorm(scoreth0)
+  pval_right <- 1 - pval_left
+  pval <- cbind(
+    theta0 = theta0, scorenull = scoreth0, pval_left, pval_right
+  )
+
+  newout <- cbind(out, totx = totx, totn = totn,  xihat = xihat, icc = phihat)
+  call <- c(
+    level = paste(level), skew = skew, cc = cc
+  )
+  outlist <- list(estimates = newout, pval = pval, call = call)
+  return(outlist)
+}
+

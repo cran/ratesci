@@ -3,10 +3,19 @@
 \name{scaspci}
 \alias{scaspci}
 \title{Skewness-corrected asymptotic score ("SCAS") confidence intervals for
-single binomial or Poisson rate using closed-form calculations.
-This function is vectorised in x, n.}
+single binomial or Poisson rate using closed-form calculations.}
 \usage{
-scaspci(x, n, distrib = "bin", level = 0.95, cc = FALSE, ...)
+scaspci(
+  x,
+  n,
+  distrib = "bin",
+  level = 0.95,
+  bcf = FALSE,
+  bign = n,
+  xihat = 1,
+  cc = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{Numeric vector of number of events.}
@@ -15,21 +24,45 @@ scaspci(x, n, distrib = "bin", level = 0.95, cc = FALSE, ...)
 times (for Poisson rates).}
 
 \item{distrib}{Character string indicating distribution assumed for the input
-data: "bin" = binomial (default), "poi" = Poisson.}
+data:\cr
+"bin" = binomial (default);\cr
+"poi" = Poisson.}
 
 \item{level}{Number specifying confidence level (between 0 and 1, default
 0.95).}
 
+\item{bcf}{Logical (default TRUE) indicating whether to apply bias correction
+in the score denominator. Applicable to \code{distrib = "bin"} only.}
+
+\item{bign}{Sample size N to be used in the calculation of bcf, if different
+from n. (Used by transformed SCASp method for paired conditional OR in
+\code{pairbinci()}.)}
+
+\item{xihat}{Number specifying estimated variance inflation factor for a
+skewness corrected version of the Saha Wilson Score interval for clustered
+binomial proportions. Need to calculate using BMS and WMS as per Saha 2016.
+Used by \code{clusterpci()} function for data entered per cluster.}
+
 \item{cc}{Number or logical (default FALSE) specifying (amount of) continuity
-correction. Numeric value is taken as the gamma parameter in Laud 2017,
-Appendix S2 (default 0.5 for 'conventional' correction if cc = TRUE).}
+adjustment. Numeric value is taken as the gamma parameter in Laud 2017,
+Appendix S2 (default 0.5 for 'conventional' adjustment if cc = TRUE).}
 
 \item{...}{Other arguments.}
 }
+\value{
+A list containing the following components: \describe{
+\item{estimates}{a matrix containing estimated rate(s), the
+SCAS confidence interval, and the input values x and n.}
+\item{call}{details of the function call.} }
+}
 \description{
-Skewness-corrected asymptotic score ("SCAS") confidence intervals for
-single binomial or Poisson rate using closed-form calculations.
+Closed-form function for computing confidence intervals for a single rate.
+Note: For associated hypothesis tests, use \code{scoreci()} with \code{contrast = "p"}.
 This function is vectorised in x, n.
+}
+\references{
+Laud PJ. Equal-tailed confidence intervals for comparison of
+rates. Pharmaceutical Statistics 2017; 16:334-348. (Appendix A.4)
 }
 \author{
 Pete Laud, \email{p.j.laud@sheffield.ac.uk}

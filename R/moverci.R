@@ -1,5 +1,5 @@
-#' MOVER confidence intervals for comparisons of independent binomial or Poisson
-#' rates.
+#' Method of Variance Estimates Recovery ("MOVER") confidence intervals
+#' for comparisons of independent binomial or Poisson rates.
 #'
 #' Confidence intervals applying the MOVER method ("Method of Variance Estimates
 #' Recovery", developed from the Newcombe method for binomial RD) across
@@ -17,34 +17,40 @@
 #' @param a1,b1,a2,b2 Numbers defining the Beta(ai,bi) prior distributions for
 #'   each group (default ai = bi = 0.5 for Jeffreys method). Gamma priors for
 #'   Poisson rates require only a1, a2.
-#' @param cc Number or logical specifying (amount of) continuity correction
-#'   (default FALSE). Numeric value is taken as the gamma parameter in Laud 2017,
-#'   Appendix S2 (default 0.5 if cc = TRUE). Forced equal to 0.5 if type = "exact".
-#' @param contrast Character string indicating the contrast of interest: "RD" =
-#'   rate difference (default), "RR" = rate ratio, "OR" = odds ratio.
-#'   contrast="p" gives an interval for the single proportion x1/n1.
+#' @param cc Number or logical specifying (amount of) continuity adjustment
+#'   (default FALSE). Numeric value is taken as the gamma parameter in Laud
+#'   2017, Appendix S2 (default 0.5 if `cc = TRUE`). Forced equal to 0.5 if
+#'   `type = "exact"`.
+#' @param contrast Character string indicating the contrast of interest: \cr
+#'  "RD" = rate difference (default); \cr
+#'  "RR" = rate ratio; \cr
+#'  "OR" = odds ratio; \cr
+#'  "p" gives an interval for the single proportion `x1/n1`.
 #' @param type Character string indicating the method used for the intervals for
-#'   the individual group rates.
-#'   "jeff" = Jeffreys equal-tailed intervals (default);
+#'   the individual group rates. \cr
+#'   "jeff" = Jeffreys equal-tailed intervals (default); \cr
 #'   "exact" = Clopper-Pearson/Garwood exact intervals (note this does NOT
 #'   result in a strictly conservative interval for the contrast, except for
-#'   contrast = "p". The scoreci function with cc = TRUE is recommended as a
-#'   superior approximation of 'exact' methods);
-#'   "midp" = mid-p intervals;
-#'   "SCAS" = SCAS non-iterative intervals;
+#'   contrast = "p". The scoreci function with `cc = TRUE` is recommended as a
+#'   superior approximation of 'exact' methods); \cr
+#'   "midp" = mid-p intervals; \cr
+#'   "SCAS" = SCAS non-iterative intervals; \cr
 #'   "wilson" = Wilson score intervals (as per Newcombe 1998).
-#'              (Rao score is used for distrib = "poi")
+#'              (Rao score is used for `distrib = "poi"`) \cr
 #'   NB: "wilson" option is included only for legacy validation against previous
-#'   published method by Newcombe. It is not recommended, as type = "jeff"
+#'   published method by Newcombe. It is not recommended, as `type = "jeff"`
 #'   or other equal-tailed options achieve much better coverage properties.
 #' @param adj Logical (default FALSE) indicating whether to apply the boundary
 #'   adjustment for Jeffreys intervals recommended on p108 of Brown et al.
-#'   (type = "jeff" only: set to FALSE if using informative priors)
+#'   (`type = "jeff"` only: set to FALSE if using informative priors.)
 #' @param ... Additional arguments.
 #' @inheritParams jeffreysci
 #' @importFrom stats pchisq pf pnorm pt qbeta qgamma qnorm qqnorm qt
 #' @importFrom graphics abline lines text
-#' @return A matrix containing the confidence interval for the requested contrast
+#' @return A list containing the following components: \describe{
+#'   \item{estimates}{a matrix containing estimates of the rates in each group
+#'   and of the requested contrast, with its confidence interval.}
+#'   \item{call}{details of the function call.} }
 #' @examples
 #' # Binomial RD, MOVER-J method:
 #' moverci(x1 = 5, n1 = 56, x2 = 0, n2 = 29)
@@ -58,11 +64,11 @@
 #'
 #'   Newcombe RG. Interval estimation for the difference between independent
 #'   proportions: comparison of eleven methods. Statistics in Medicine 1998;
-# ;   17(8):873-890.
+#'   17(8):873-890.
 #'
 #'   Donner A, Zou G. Closed-form confidence intervals for functions of the
 #'   normal mean and standard deviation. Statistical Methods in Medical Research
-# ;   2012; 21(4):347-359.
+#'   2012; 21(4):347-359.
 #'
 #'   Fagerland MW, Newcombe RG. Confidence intervals for odds ratio and relative
 #'   risk based on the inverse hyperbolic sine transformation. Statistics in
@@ -77,16 +83,16 @@ moverci <- function(x1,
                     n1,
                     x2 = NULL,
                     n2 = NULL,
+                    distrib = "bin",
+                    contrast = "RD",
+                    level = 0.95,
                     a1 = 0.5,
                     b1 = 0.5,
                     a2 = 0.5,
                     b2 = 0.5,
-                    cc = FALSE,
-                    level = 0.95,
-                    distrib = "bin",
-                    contrast = "RD",
                     type = "jeff",
                     adj = FALSE,
+                    cc = FALSE,
                     ...) {
   if (!(tolower(substr(type, 1, 4)) %in%
     c("jeff", "wils", "exac", "scas", "midp"))) {
@@ -155,16 +161,16 @@ moverci <- function(x1,
 
   if (type %in% c("jeff", "exact")) {
     if (type == "exact") cc <- 0.5
-    # MOVER-J, including optional 'continuity correction'
+    # MOVER-J, including optional continuity adjustment
     j1 <- jeffreysci(x1, n1,
       ai = a1, bi = b1, cc = cc, level = level,
       distrib = distrib, adj = adj
-    )
+    )$estimates[, c(1:3), drop = FALSE]
     if (contrast != "p") {
       j2 <- jeffreysci(x2, n2,
         ai = a2, bi = b2, cc = cc, level = level,
         distrib = distrib, adj = adj
-      )
+      )$estimates[, c(1:3), drop = FALSE]
     } else {
       j2 <- NULL
     }
@@ -274,9 +280,15 @@ moverci <- function(x1,
       lower[(x1 == 0)] <- 0
     }
   }
-  CI <- cbind(Lower = lower, Estimate = est, Upper = upper)
-  row.names(CI) <- NULL
-  CI
+  estimates <- cbind(lower = lower, est = est, upper = upper, level = level,
+              x1 = x1, n1 = n1, x2 = x2, n2 = n2, p1hat = p1hat, p2hat = p2hat)
+  row.names(estimates) <- NULL
+  call <- c(
+    distrib = distrib, contrast = contrast, level = level, type = type, adj = adj,
+    cc = cc, a1 = a1, b1 = b1, a2 = a2, b2 = b2
+  )
+  outlist <-list(estimates = estimates, call = call)
+  return(outlist)
 }
 
 #' Jeffreys and other approximate Bayesian confidence intervals for a single
@@ -287,25 +299,31 @@ moverci <- function(x1,
 #' the Jeffreys method (with Beta(0.5, 0.5) or Gamma(0.5) respectively), as well
 #' as any user-specified prior distribution. Clopper-Pearson method (as
 #' quantiles of a Beta distribution as described in Brown et al. 2001) also
-#' included by way of a "continuity correction" parameter.
+#' included by way of a "continuity adjustment" parameter.
 #'
 #' @param x Numeric vector of number of events.
 #' @param n Numeric vector of sample sizes (for binomial rates) or exposure
 #'   times (for Poisson rates).
-#' @param ai,bi Numbers defining the Beta prior distribution (default ai = bi =
-#'   0.5 for Jeffreys interval). Gamma prior for Poisson rates requires only ai.
-#' @param cc Number or logical specifying (amount of) "continuity correction".
-#'   cc = 0 (default) gives Jeffreys interval, cc = 0.5 gives the
+#' @param ai,bi Numbers defining the Beta prior distribution (default `ai = bi =
+#'   0.5`` for Jeffreys interval). Gamma prior for Poisson rates requires only ai.
+#' @param cc Number or logical specifying (amount of) "continuity adjustment".
+#'   cc = 0 (default) gives Jeffreys interval, `cc = 0.5` gives the
 #'   Clopper-Pearson interval (or Garwood for Poisson). A value between 0 and
 #'   0.5 allows a compromise between proximate and conservative coverage.
 #' @param level Number specifying confidence level (between 0 and 1, default
 #'   0.95).
 #' @param distrib Character string indicating distribution assumed for the input
-#'   data: "bin" = binomial (default), "poi" = Poisson.
+#'   data:\cr
+#'   "bin" = binomial (default);\cr
+#'   "poi" = Poisson.
 #' @param adj Logical (default TRUE) indicating whether to apply the boundary
 #'   adjustment recommended on p108 of Brown et al. (set to FALSE if informative
-#'   priors are used)
+#'   priors are used).
 #' @param ... Other arguments.
+#' @return A list containing the following components: \describe{
+#'   \item{estimates}{a matrix containing estimated rate(s), and corresponding
+#'   approximate Bayesian confidence interval, and the input values x and n.}
+#'   \item{call}{details of the function call.} }
 #' @importFrom stats qbeta qgamma qnorm
 #' @author Pete Laud, \email{p.j.laud@@sheffield.ac.uk}
 #' @examples
@@ -355,7 +373,7 @@ jeffreysci <- function(x,
     }
   } else if (distrib == "poi") {
     # Jeffreys prior for Poisson rate uses gamma distribution,
-    # as defined in Li et al. with "continuity correction" from Laud 2017.
+    # as defined in Li et al. with continuity adjustment from Laud 2017.
     CI_lower <- qgamma(alpha / 2, x + (ai - cc), scale = 1 / n)
     est <- qgamma(0.5, x + (ai), scale = 1 / n)
     if (adj == TRUE) {
@@ -364,8 +382,13 @@ jeffreysci <- function(x,
     }
     CI_upper <- qgamma(1 - alpha / 2, (x + (ai + cc)), scale = 1 / n)
   }
-  CI <- cbind(Lower = CI_lower, est = est, Upper = CI_upper)
-  CI
+  CI <- cbind(lower = CI_lower, est = est, upper = CI_upper, x = x, n = n)
+  outlist <- list(estimates = CI)
+  call <- c(
+    distrib = distrib, level = level, cc = cc, adj = adj, ai = ai, bi = bi
+  )
+  outlist <- append(outlist, list(call = call))
+  return(outlist)
 }
 
 #' Approximate Bayesian ("MOVER-B") confidence intervals for
@@ -375,9 +398,9 @@ jeffreysci <- function(x,
 #' intervals for the rate (or risk) difference ("RD") or ratio ("RR") for
 #' independent binomial or Poisson rates, or for odds ratio ("OR", binomial
 #' only). (developed from Newcombe, Donner & Zou, Li et al, and Fagerland &
-#' Newcombe, and generalised as "MOVER-B" in forthcoming publication) including
+#' Newcombe, and generalised as "MOVER-B" in Laud 2017) including
 #' special case "MOVER-J" using non-informative priors with optional continuity
-#' correction.  This function is vectorised in x1, x2, n1, and n2.
+#' adjustment.  This function is vectorised in x1, x2, n1, and n2.
 #'
 #' @param x1,x2 Numeric vectors of numbers of events in group 1 & group 2
 #'   respectively.
@@ -387,6 +410,10 @@ jeffreysci <- function(x,
 #'   each group (default ai = bi = 0.5 for Jeffreys uninformative priors). Gamma
 #'   priors for Poisson rates require only a1, a2.
 #' @inheritParams moverci
+#' @return A list containing the following components: \describe{
+#'   \item{estimates}{a matrix containing estimates of the rates in each group
+#'   and of the requested contrast, with its confidence interval}
+#'   \item{call}{details of the function call} }
 #' @author Pete Laud, \email{p.j.laud@@sheffield.ac.uk}
 #' @export
 moverbci <- function(x1,
@@ -419,18 +446,4 @@ moverbci <- function(x1,
     adj = FALSE,
     ...
   )
-}
-
-#' Internal function - superseded by new wilsonci function
-#'
-#' @author Pete Laud, \email{p.j.laud@@sheffield.ac.uk}
-#'
-#' @noRd
-quadroot <- function(a, b, c_) {
-  # GET ROOTS OF A QUADRATIC EQUATION
-  r1x <- (-b + sqrt(b^2 - 4 * a * c_)) / (2 * a)
-  r2x <- (-b - sqrt(b^2 - 4 * a * c_)) / (2 * a)
-  r1 <- pmin(r1x, r2x)
-  r2 <- pmax(r1x, r2x)
-  cbind(r1, r2)
 }

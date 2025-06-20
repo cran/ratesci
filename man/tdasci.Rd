@@ -3,7 +3,8 @@
 \name{tdasci}
 \alias{tdasci}
 \title{t-distribution asymptotic score ("TDAS") confidence intervals for
-comparisons of independent binomial or Poisson rates.}
+random effects stratified comparisons of independent binomial or
+Poisson rates.}
 \usage{
 tdasci(
   x1,
@@ -22,7 +23,8 @@ tdasci(
   xlim = NULL,
   ylim = NULL,
   weighting = NULL,
-  MNtol = 1e-08,
+  mn_tol = 1e-08,
+  MNtol = NULL,
   wt = NULL,
   skew = TRUE,
   prediction = FALSE,
@@ -38,30 +40,36 @@ respectively.}
 times (for Poisson rates) in each group.}
 
 \item{distrib}{Character string indicating distribution assumed for the input
-data: "bin" = binomial (default), "poi" = Poisson.}
+data: \cr
+"bin" = binomial (default), \cr
+"poi" = Poisson.}
 
-\item{contrast}{Character string indicating the contrast of interest: "RD" =
-rate difference (default), "RR" = rate ratio, "OR" = odds ratio.
-contrast="p" gives an interval for the single proportion or rate x1/n1.}
+\item{contrast}{Character string indicating the contrast of interest: \cr
+"RD" = rate difference (default); \cr
+"RR" = rate ratio; \cr
+"OR" = odds ratio; \cr
+"p" gives an interval for the single proportion or rate \code{x1/n1}.}
 
 \item{level}{Number specifying confidence level (between 0 and 1, default
 0.95).}
 
 \item{cc}{Number or logical (default FALSE) specifying (amount of) continuity
-correction. Numeric value is taken as the gamma parameter in Laud 2017,
-Appendix S2 (default 0.5 for 'conventional' correction if cc = TRUE).
+adjustment. Numeric value between 0 and 0.5 is taken as the gamma parameter
+in Laud 2017, Appendix S2 (\code{cc = TRUE} translates to 0.5 for 'conventional'
+Yates adjustment). \cr
 IMPORTANT NOTES:
 \enumerate{
-\item This is a 'continuity correction' aimed at approximating strictly
+\item This adjustment (conventionally but controversially termed
+'continuity correction') is aimed at approximating strictly
 conservative coverage, NOT for dealing with zero cell counts. Such
 'sparse data adjustments' are not needed in the score method,
-except to deal with double-zero cells for RD (& double-100\% cells for
-binomial RD & RR) with IVS/INV weights.
-\item The continuity corrections provided here have not been fully tested for
-stratified methods, but are found to match the Mantel-Haenszel corrected test,
-when cc = 0.5 for any of the binomial contrasts. Flexibility is included for
-a less conservative correction, such as cc = 0.25 suggested in Laud 2017
-(see Appendix S3.4), or cc = 3/16 = 0.1875 in Mehrotra & Railkar (2000)
+except to deal with double-zero cells for stratified  RD (& double-100\%
+cells for binomial RD & RR) with IVS/INV weights.
+\item The continuity adjustments provided here have not been fully tested for
+stratified methods, but are found to match the continuity-adjusted version
+of the Mantel-Haenszel test, when \code{cc = 0.5} for any of the binomial
+contrasts. Flexibility is included for a less conservative adjustment, such
+as \code{cc = 0.25} suggested in Laud 2017 (see Appendix S3.4), or \code{cc = 3/16 =   0.1875} in Mehrotra & Railkar (2000).
 }}
 
 \item{theta0}{Number to be used in a one-sided significance test (e.g.
@@ -86,21 +94,34 @@ x-axis of plots (useful for ratio contrasts which can be infinite).}
 \item{ylim}{pair of values indicating range of values to be plotted.}
 
 \item{weighting}{String indicating which weighting method to use if
-stratified = "TRUE":
-"IVS" = Inverse Variance of Score (see Laud 2017 for details),
-"INV" = Inverse Variance (bcf omitted, default for contrast = "OR"),
-"MH" = Mantel-Haenszel (default for contrast = "RD" or "RR"),
+stratified = "TRUE": \cr
+"IVS" = Inverse Variance of Score (see Laud 2017 for details); \cr
+"INV" = Inverse Variance (bcf omitted, default for contrast = "OR" giving
+CMH test); \cr
+"MH" = Mantel-Haenszel (n1j * n2j) / (n1j + n2j)
+(default for contrast = "RD" or "RR" giving CMH test);
+(= sample size for contrast = "p"); \cr
 "MN" = Miettinen-Nurminen weights.
 (similar to MH for contrast = "RD" or "RR",
-similar to INV for contrast = "OR")
-For CI consistent with a CMH test, select skew = FALSE, random = FALSE,
-and use default MH weighting for RD/RR and INV for OR.
-Weighting = 'MN' also matches the CMH test.}
+similar to INV for contrast = "OR"); \cr
+"Tang" = (n1j * n2j) / (n1j + n2j) / (1 - pj) from Tang 2020,
+for an optimal test of RD if RRs are constant across strata.
+(Included only for validation purposes. In general, such a test
+would more logically use contrast = "RR" with weighting = "INV")
+For CI consistent with a CMH test, select \code{skew = FALSE}, \code{random = FALSE},
+and use default MH weighting for RD/RR and INV for OR. \cr
+\code{Weighting = "MN"} also matches the CMH test. \cr
+For the Radhakrishna optimal (most powerful) test, select INV weighting.\cr
+Note: Alternative user-specified weighting may also be applied, via the
+'wt' argument.}
 
-\item{MNtol}{Numeric value indicating convergence tolerance to be used in
+\item{mn_tol}{Numeric value indicating convergence tolerance to be used in
 iteration with weighting = "MN".}
 
-\item{wt}{Numeric vector containing (optional) user-specified weights.}
+\item{MNtol}{(deprecated: argument renamed to mn_tol)}
+
+\item{wt}{Numeric vector containing (optional) user-specified weights.\cr
+Overrides \code{weighting} if non-empty.}
 
 \item{skew}{Logical (default TRUE) indicating whether to apply skewness
 correction (for the SCAS method recommended in Laud 2017) or not (for

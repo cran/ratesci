@@ -33,29 +33,40 @@ each group (default ai = bi = 0.5 for Jeffreys uninformative priors). Gamma
 priors for Poisson rates require only a1, a2.}
 
 \item{distrib}{Character string indicating distribution assumed for the input
-data: "bin" = binomial (default), "poi" = Poisson.}
+data:\cr
+"bin" = binomial (default);\cr
+"poi" = Poisson.}
 
-\item{contrast}{Character string indicating the contrast of interest: "RD" =
-rate difference (default), "RR" = rate ratio, "OR" = odds ratio.
-contrast="p" gives an interval for the single proportion x1/n1.}
+\item{contrast}{Character string indicating the contrast of interest: \cr
+"RD" = rate difference (default); \cr
+"RR" = rate ratio; \cr
+"OR" = odds ratio; \cr
+"p" gives an interval for the single proportion \code{x1/n1}.}
 
 \item{level}{Number specifying confidence level (between 0 and 1, default
 0.95).}
 
-\item{cc}{Number or logical specifying (amount of) continuity correction
-(default FALSE). Numeric value is taken as the gamma parameter in Laud 2017,
-Appendix S2 (default 0.5 if cc = TRUE). Forced equal to 0.5 if type = "exact".}
+\item{cc}{Number or logical specifying (amount of) continuity adjustment
+(default FALSE). Numeric value is taken as the gamma parameter in Laud
+2017, Appendix S2 (default 0.5 if \code{cc = TRUE}). Forced equal to 0.5 if
+\code{type = "exact"}.}
 
 \item{...}{Additional arguments.}
+}
+\value{
+A list containing the following components: \describe{
+\item{estimates}{a matrix containing estimates of the rates in each group
+and of the requested contrast, with its confidence interval}
+\item{call}{details of the function call} }
 }
 \description{
 Wrapper function for the MOVER-B methods.  Approximate Bayesian confidence
 intervals for the rate (or risk) difference ("RD") or ratio ("RR") for
 independent binomial or Poisson rates, or for odds ratio ("OR", binomial
 only). (developed from Newcombe, Donner & Zou, Li et al, and Fagerland &
-Newcombe, and generalised as "MOVER-B" in forthcoming publication) including
+Newcombe, and generalised as "MOVER-B" in Laud 2017) including
 special case "MOVER-J" using non-informative priors with optional continuity
-correction.  This function is vectorised in x1, x2, n1, and n2.
+adjustment.  This function is vectorised in x1, x2, n1, and n2.
 }
 \author{
 Pete Laud, \email{p.j.laud@sheffield.ac.uk}

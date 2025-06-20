@@ -1,3 +1,60 @@
+# ratesci 1.0.0 (2025-06-20)
+
+## New features
+* New function `clusterpci()` for CI and test for a single binomial proportion 
+  from clustered data.
+* Example datasets are now included.
+* Improved documentation with pkgdown website & vignettes.
+
+### In `pairbinci()`:
+* `skew` for skewness correction. 
+* `bcf` for variance bias correction.
+* Default paired RD and RR method changed to new SCAS method 
+  (i.e. including skewness correction - manuscript under review).
+* `method_RD`, `method_RR` and `method_OR` are replaced with `method`.
+* Bonett-Price methods for RD and RR (including proposed Jeffreys variant 
+  option for RR).
+* TDAS method is deprecated.
+* Default for MOVER method changed to Jeffreys.
+* MOVER calculations now use x/N as point estimate instead of median from the
+  Beta distribution.
+* `cc` uses a new form of correction for RR giving equivariant intervals. Also 
+  allows consistency with the continuity-corrected McNemar test (or an 
+  intermediate correction of the user's choosing). `cctype` is deprecated.
+* Default conditional odds ratio method changed to SCASp (with closed-form 
+  calculation).
+* Output object now includes estimates of p1, p2, phi (correlation) 
+  and psi (odds ratio used by Fagerland et al).
+* Output object now includes function call.
+
+### In `scaspci()`:
+* `bcf` option now implemented for contrast = "p" (default = FALSE).
+* `bign` allows a different sample size to be used in the bias correction 
+  (used within transformed SCASp method for paired OR in `pairbinci`, for 
+  consistency with 'N-1' test).
+
+### In `scoreci()`:
+* `bcf` option now implemented for contrast = "p" (default = FALSE).
+* (Note adjusted sample size for bias correction can be achieved by including a 
+   non-zero value for n2.)
+* ORbias, RRtang, and MNtol arguments renamed as or_bias, rr_tang and mn_tol.
+* Implementation of `precis` argument is improved for RR and OR contrasts.
+* For contrast = "RD", weighting = "Tang" provides optimal test if RR is 
+  constant across strata.
+
+## Bug fixes
+### In `exactci()`:
+* Corrected duplicate point estimate reported for vector inputs.
+* Derive point estimates to match LCL and UCL with level = 0.
+* Corrected LCL for Poisson mid-p method.
+
+## Other
+* Output object column names are updated (lower, est, upper) for consistency 
+  and style conformity.
+* Tests added to confirm consistency of score methods vs McNemar test.
+* Dependence on polynom package removed.
+* Edition 3 of testthat implemented.
+
 # ratesci 0.5.0 (2025-01-10)
 
 ## New features
@@ -18,11 +75,13 @@
   methods for OR.
 * Confirmed and documented that the 2-sided significance test is equivalent 
   to the McNemar test (with or without continuity correction).
+
 ### In `scoreci()`:
 * Confirmed that continuity corrections for all stratified (fixed-effects) 
   binomial contrasts are consistent with the Mantel-Haenszel correction.
 * Updated heterogeneity test to consistently omit non-informative 
   (but non-empty) strata, and output the degrees of freedom.
+
 ### In `moverci()`:
 * Added continuity correction for `type` = "wilson".
 * Added options for `type` = "SCAS" and "midp" intervals.
@@ -34,6 +93,7 @@
   Vincent Jaquet for reporting the issue and proposed solution. 
   Also #27 for RR, thanks to @lovestat.) 
   As a result, double-zero strata need not be excluded when weighting = "MN".
+
 ### In `moverci()`:
 * Corrected calculation of score intervals for single Poisson rate, using 
   Rao score interval.
@@ -70,6 +130,7 @@ for stratified analysis with INV/IVS weights. Experimental for Poisson RR).
   * contrast = RR with IVS/INV weighting if RRtang = FALSE;
   * random = TRUE (needs further evaluation);
   * excluded using new option dropzeros = TRUE.
+
 ### In `tdasci()`:
 * Default uses skew = TRUE for stratum CIs.
 
